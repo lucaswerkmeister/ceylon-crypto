@@ -10,7 +10,7 @@ This is implemented in a very straightforward way from the
 description of the algorithm, see [Wikipedia entry](https://en.wikipedia.org/wiki/SHA-2) or
 [this document](https://web.archive.org/web/20150315061807/http://csrc.nist.gov/groups/STM/cavp/documents/shs/sha256-384-512.pdf).
 
-Very crude tests show that it seems to run at about 1/3 the speed of the standard Java implementation.
+Very crude tests on the JVM backend indicate that it runs at about 1/3 the speed of the standard Java implementation.
 
 It runs using the JVM and the JavaScript runtime.
 
