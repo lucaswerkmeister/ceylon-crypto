@@ -28,16 +28,24 @@
 shared interface BlockProcessor
 {
     shared formal Integer blockSize;
+    shared formal Integer? maxMessageLength;
     
-    shared formal void init();
-    shared formal void update({Byte*} message);
+    shared formal BlockProcessor init();
+    shared formal BlockProcessor update({Byte*} message);
     shared formal Byte[] finish();
 
     shared Byte[] updateFinish({Byte*} message)
-    {
-        update(message);
-        return finish();
-    }
+        => update(message).finish();
+}
+
+shared interface Digest
+        satisfies BlockProcessor
+{
+    "Length of the resulting digest, in bits. This is supposed to be the same for every input message. Will always be positive."
+    shared formal Integer digestLengthBits;
+
+    "Length of the resulting digest, in octets (8 bit bytes). This is supposed to be the same for every input message. Will always be positive."    
+    shared Integer digestLengthOctets => (digestLengthBits - 1) / 8 + 1;
 }
 
 abstract class AbstractBlockProcessor(blockSize)
@@ -52,12 +60,13 @@ abstract class AbstractBlockProcessor(blockSize)
 
 //    variable Integer validBitsInLastByte = 8;
     
-    shared default actual void init()
+    shared default actual AbstractBlockProcessor init()
     {
         _numBytesUsed = 0;
+        return this;
     }
 
-    shared actual void update({Byte*} message)
+    shared actual AbstractBlockProcessor update({Byte*} message)
     {
         for (next in message) {
             Integer bufPos = _numBytesUsed++ % blockSize;
@@ -66,6 +75,7 @@ abstract class AbstractBlockProcessor(blockSize)
                 processBlock(block);
             }
         }
+        return this;
     }
 
     shared actual Byte[] finish()
@@ -80,3 +90,18 @@ abstract class AbstractBlockProcessor(blockSize)
     shared formal void padLast();
     shared formal Byte[] finishedResult;
 }
+
+abstract class AbstractDigest(blockSize, digestLengthBits)
+        extends AbstractBlockProcessor(blockSize)
+        satisfies Digest
+{
+    Integer blockSize;
+    shared actual Integer digestLengthBits;
+}
+
+{Byte*} toBytes(Integer val) => {
+    val.rightLogicalShift(24).byte,
+    val.rightLogicalShift(16).byte,
+    val.rightLogicalShift(8).byte,
+    val.byte
+};
