@@ -2,13 +2,16 @@ import ceylon.test {
     test,
     parameters
 }
-import de.dlkw.ccrypto {
-    RsaCrtPrivateKey,
+
+import de.dlkw.ccrypto.impl {
     RsaSsaPssSign,
     os2ip,
     RsaSsaPssVerify,
-    RsaPublicKey,
-    RsaExponentPrivateKey
+    RsaCrtPrivateKeyImpl,
+    RsaExponentPrivateKeyImpl,
+    RsaPublicKeyImpl,
+    Sha1,
+    MGF1
 }
 
 
@@ -211,20 +214,20 @@ class TestVectorsIll()
            #4b.byte, #8e.byte, #22.byte, #fd.byte, #de.byte, #1e.byte, #5a.byte, #2e.byte, #3b.byte, #d8.byte, #aa.byte, #5b.byte, #a8.byte, #d8.byte, #58.byte, #41.byte,
            #94.byte, #eb.byte, #21.byte, #90.byte, #ac.byte, #f8.byte, #32.byte, #b8.byte, #47.byte, #f1.byte, #3a.byte, #3d.byte, #24.byte, #a7.byte, #9f.byte, #4d.byte];
            
-        value privKey1 = RsaCrtPrivateKey(os2ip(p), os2ip(q), os2ip(dP), os2ip(dQ), os2ip(qInv));
-        RsaSsaPssSign rsaSig1 = RsaSsaPssSign(privKey1, salt);
-        value sig1 = rsaSig1.update(message).finish();
+        value privKey1 = RsaCrtPrivateKeyImpl(os2ip(p), os2ip(q), os2ip(dP), os2ip(dQ), os2ip(qInv));
+        RsaSsaPssSign rsaSig1 = RsaSsaPssSign(privKey1, Sha1(), MGF1(Sha1()), salt, 20);
+        value sig1 = rsaSig1.update(message).sign();
         
         assert (sig1 == signature);
         
-        value privKey2 = RsaExponentPrivateKey(os2ip(d), os2ip(n));
-        RsaSsaPssSign rsaSig2 = RsaSsaPssSign(privKey2, salt);
-        value sig2 = rsaSig2.update(message).finish();
+        value privKey2 = RsaExponentPrivateKeyImpl(os2ip(d), os2ip(n));
+        RsaSsaPssSign rsaSig2 = RsaSsaPssSign(privKey2, Sha1(), MGF1(Sha1()), salt, 20);
+        value sig2 = rsaSig2.update(message).sign();
         
         assert (sig2 == signature);
         
-        value pubKey = RsaPublicKey(os2ip(e), os2ip(n));
-        RsaSsaPssVerify rsaVerify = RsaSsaPssVerify(pubKey);
+        value pubKey = RsaPublicKeyImpl(os2ip(e), os2ip(n));
+        RsaSsaPssVerify rsaVerify = RsaSsaPssVerify(pubKey, Sha1(), MGF1(Sha1()), 20);
         rsaVerify.update(message);
         assert (rsaVerify.verify(signature));
     }

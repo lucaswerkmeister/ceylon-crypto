@@ -1,14 +1,16 @@
-void mgf() {}
+import de.dlkw.ccrypto.api {
+    MessageDigester
+}
 
-interface MaskGeneratingFunction
+shared interface MaskGeneratingFunction
 {
     shared formal Byte[] mask({Byte*} mgfSeed, Integer maskLength);
 }
 
-class MGF1(Digest digest)
+shared class MGF1(MessageDigester digest)
         satisfies MaskGeneratingFunction
 {
-    digest.init();
+    digest.reset();
 
     Integer hLen => digest.digestLengthOctets;
     
@@ -19,7 +21,7 @@ class MGF1(Digest digest)
         variable Byte[] t = [];
         for (i in 0 .. (maskLength - 1) / hLen + 1) {
             value c = toBytes(i);
-            value x = digest.update(mgfSeed).updateFinish(c);
+            value x = digest.update(mgfSeed).digest(c);
             t = concatenate(t, x);
         }
         return t.take(maskLength).sequence();

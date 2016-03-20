@@ -1,7 +1,7 @@
 import ceylon.buffer.charset {
     ascii
 }
-import de.dlkw.ccrypto {
+import de.dlkw.ccrypto.impl {
     createSha256,
     createSha1
 }
@@ -24,7 +24,7 @@ shared void run() {
     List<Byte> bb = ascii.encode("Franz jagt im komplett verwahrlosten Taxi quer durch Bayern");
     value expected = [#d3.byte, #2b.byte, #56.byte, #8c.byte, #d1.byte, #b9.byte, #6d.byte, #45.byte, #9e.byte, #72.byte, #91.byte, #eb.byte, #f4.byte, #b2.byte, #5d.byte, #0.byte, #7f.byte, #27.byte, #5c.byte, #9f.byte, #13.byte, #14.byte, #9b.byte, #ee.byte, #b7.byte, #82.byte, #fa.byte, #c0.byte, #71.byte, #66.byte, #13.byte, #f8.byte];
     value sha256 = createSha256();
-    value digest = sha256.updateFinish(bb);
+    value digest = sha256.digest(bb);
     print(digest.collect((b)=>formatInteger(b.unsigned, 16)));
     
     value x = MessageDigest.getInstance("SHA-256");
@@ -52,7 +52,7 @@ shared void run_1() {
     List<Byte> bb = ascii.encode("The quick brown fox jumps over the lazy cog");
     value expected = [#2f.byte, #d4.byte, #e1.byte, #c6.byte, #7a.byte, #2d.byte, #28.byte, #fc.byte, #ed.byte, #84.byte, #9e.byte, #e1.byte, #bb.byte, #76.byte, #e7.byte, #39.byte, #1b.byte, #93.byte, #eb.byte, #12.byte];
     value sha1 = createSha1();
-    value digest = sha1.updateFinish(bb);
+    value digest = sha1.digest(bb);
     print(digest.collect((b)=>formatInteger(b.unsigned, 16)));
 }
 
@@ -79,7 +79,7 @@ class Sha1Tester()
     
     shared void cmpWithJava({Byte*}bytes)
     {
-        value cResult = cSha1.updateFinish(bytes);
+        value cResult = cSha1.digest(bytes);
         value jResult = jSha1.digest(createJavaByteArray(bytes)).byteArray;
         
         assert (cResult.size == jResult.size);

@@ -1,23 +1,41 @@
 
+
 """
    Implementation of the SHA-256 message digest (hash) algorithm
    as given in
    [SHA-256 description](https://web.archive.org/web/20150315061807/http://csrc.nist.gov/groups/STM/cavp/documents/shs/sha256-384-512.pdf)
 """
-class Sha1()
-        extends AbstractDigest(64, 160)
-        satisfies Digest
+shared class Sha256()
+        extends AbstractDigest(64, 256)
 {
-    value hInit = Array({ #67452301, #efcdab89, #98badcfe, #10325476, #c3d2e1f0 });
+    value hInit = Array({ #6a09e667, #bb67ae85, #3c6ef372, #a54ff53a, #510e527f, #9b05688c, #1f83d9ab, #5be0cd19 });
 
+    value k = Array({
+        #428a2f98, #71374491, #b5c0fbcf, #e9b5dba5,
+        #3956c25b, #59f111f1, #923f82a4, #ab1c5ed5,
+        #d807aa98, #12835b01, #243185be, #550c7dc3,
+        #72be5d74, #80deb1fe, #9bdc06a7, #c19bf174,
+        #e49b69c1, #efbe4786, #0fc19dc6, #240ca1cc,
+        #2de92c6f, #4a7484aa, #5cb0a9dc, #76f988da,
+        #983e5152, #a831c66d, #b00327c8, #bf597fc7,
+        #c6e00bf3, #d5a79147, #06ca6351, #14292967,
+        #27b70a85, #2e1b2138, #4d2c6dfc, #53380d13,
+        #650a7354, #766a0abb, #81c2c92e, #92722c85,
+        #a2bfe8a1, #a81a664b, #c24b8b70, #c76c51a3,
+        #d192e819, #d6990624, #f40e3585, #106aa070,
+        #19a4c116, #1e376c08, #2748774c, #34b0bcb5,
+        #391c0cb3, #4ed8aa4a, #5b9cca4f, #682e6ff3,
+        #748f82ee, #78a5636f, #84c87814, #8cc70208,
+        #90befffa, #a4506ceb, #bef9a3f7, #c67178f2 });
+    
     value hCurrent = Array(hInit);
     
     // FIXME correct this
     shared actual Integer? maxMessageLength = null;
 
-    shared actual Sha1 init()
+    shared actual Sha256 reset()
     {
-        super.init();
+        super.reset();
         hInit.copyTo(hCurrent);
         return this;
     }
@@ -65,55 +83,48 @@ class Sha1()
         assert (exists c0 = hCurrent[2]);
         assert (exists d0 = hCurrent[3]);
         assert (exists e0 = hCurrent[4]);
+        assert (exists f0 = hCurrent[5]);
+        assert (exists g0 = hCurrent[6]);
+        assert (exists h0 = hCurrent[7]);
         
         variable value a = a0;
         variable value b = b0;
         variable value c = c0;
         variable value d = d0;
         variable value e = e0;
+        variable value f = f0;
+        variable value g = g0;
+        variable value h = h0;
         
-        value w = Array.ofSize(80, 0);
-        for (j in 0:80) {
+        value w = Array.ofSize(64, 0);
+        for (j in 0:64) {
+            assert (exists kJ = k[j]);
+
             Integer wJ;
             if (j < 16) {
                 assert (exists mJ = chunk[j]);
                 wJ = mJ;
             }
             else {
-                assert (exists wJ3 = w[j - 3]);
-                assert (exists wJ8 = w[j - 8]);
-                assert (exists wJ14 = w[j - 14]);
+                assert (exists wJ2 = w[j - 2]);
+                assert (exists wJ7 = w[j - 7]);
+                assert (exists wJ15 = w[j - 15]);
                 assert (exists wJ16 = w[j - 16]);
-                wJ = rotLeft32(wJ3.xor(wJ8).xor(wJ14).xor(wJ16), 1);
+                wJ = (sigma1(wJ2) + wJ7 + sigma0(wJ15) + wJ16).and(#ffff_ffff);
             }
             w.set(j, wJ);
 
-            Integer f;
-            Integer k;
-            if (j < 20) {
-                f = b.and(c).or(not32(b).and(d));
-                k = #5a827999;
-            }
-            else if (j < 40) {
-                f = b.xor(c).xor(d);
-                k = #6ed9eba1;
-            }
-            else if (j < 60) {
-                f = b.and(c).or(b.and(d)).or(c.and(d));
-                k = #8f1bbcdc;
-            }
-            else {
-                f = b.xor(c).xor(d);
-                k = #ca62c1d6;
-            }
+            Integer tmp1 = (h + capSigma1(e) + ch(e, f, g) + kJ + wJ).and(#ffff_ffff);
+            Integer tmp2 = (capSigma0(a) + maj(a, b, c)).and(#ffff_ffff);
 
-            Integer tmp = (rotLeft32(a, 5) + f + e + k + wJ).and(#ffff_ffff);
-
-            e = d;
+            h = g;
+            g = f;
+            f = e;
+            e = (d + tmp1).and(#ffff_ffff);
             d = c;
-            c = rotLeft32(b, 30);
+            c = b;
             b = a;
-            a = tmp;
+            a = (tmp1 + tmp2).and(#ffff_ffff);
         }
         
         hCurrent.set(0, (a0 + a).and(#ffff_ffff));
@@ -121,37 +132,45 @@ class Sha1()
         hCurrent.set(2, (c0 + c).and(#ffff_ffff));
         hCurrent.set(3, (d0 + d).and(#ffff_ffff));
         hCurrent.set(4, (e0 + e).and(#ffff_ffff));
+        hCurrent.set(5, (f0 + f).and(#ffff_ffff));
+        hCurrent.set(6, (g0 + g).and(#ffff_ffff));
+        hCurrent.set(7, (h0 + h).and(#ffff_ffff));
     }
+    
+    shared actual Byte[] digest({Byte*} messagePart) => super.finish(messagePart);
 
+    Integer ch(Integer x, Integer y, Integer z)
+            => x.and(y).xor(not32(x).and(z));
+    
+    Integer maj(Integer x, Integer y, Integer z)
+            => x.and(y).xor(x.and(z)).xor(y.and(z));
+    
+    Integer capSigma0(Integer x)
+            => rotRight32(x, 2).xor(rotRight32(x, 13)).xor(rotRight32(x, 22));
+    
+    Integer capSigma1(Integer x)
+            => rotRight32(x, 6).xor(rotRight32(x, 11)).xor(rotRight32(x, 25));
+    
+    Integer sigma0(Integer x)
+            => rotRight32(x, 7).xor(rotRight32(x, 18)).xor(x.rightLogicalShift(3));
+    
+    Integer sigma1(Integer x)
+            => rotRight32(x, 17).xor(rotRight32(x, 19)).xor(x.rightLogicalShift(10));
 }
 
-Integer not32(Integer x) => x.not.and(#ffff_ffff);
-
-Integer rotRight32(Integer num, Integer rot)
-{
-    Integer num32 = num.and(#ffff_ffff);
-    return num32.rightLogicalShift(rot).or(num32.leftLogicalShift(32 - rot).and(#ffff_ffff));
-}
-
-Integer rotLeft32(Integer num, Integer rot)
-{
-    Integer num32 = num.and(#ffff_ffff);
-    return num32.leftLogicalShift(rot).or(num32.rightLogicalShift(32 - rot).and(#ffff_ffff));
-}
-
-shared void test2b1()
+shared void test2b()
 {
     value m = [#61626380, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, #18];
-    value sha1 = Sha1();
+    value sha256 = Sha256();
     print("3 byte integer primitive");
-    sha1.processIntegerChunk(m);
-    print(sha1.finishedResult.collect((b)=>formatInteger(b.unsigned, 16)));
+    sha256.processIntegerChunk(m);
+    print(sha256.finishedResult.collect((b)=>formatInteger(b.unsigned, 16)));
     
     print("ext use");
-    sha1.init();
-    sha1.update({#61.byte, #62.byte, #63.byte});
-    print(sha1.finish().collect((b)=>formatInteger(b.unsigned, 16)));
+    sha256.reset();
+    sha256.update({#61.byte, #62.byte, #63.byte});
+    print(sha256.finish().collect((b)=>formatInteger(b.unsigned, 16)));
     
     value m2_0 = [
         #61626364, #62636465, #63646566, #64656667, #65666768, #66676869, #6768696a, #68696a6b,
@@ -163,30 +182,30 @@ shared void test2b1()
     ];
         
     print("56 byte integer primitive");
-    sha1.processIntegerChunk(m2_0);
-    sha1.processIntegerChunk(m2_1);
-    print(sha1.finishedResult.collect((b)=>formatInteger(b.unsigned, 16)));
+    sha256.processIntegerChunk(m2_0);
+    sha256.processIntegerChunk(m2_1);
+    print(sha256.finishedResult.collect((b)=>formatInteger(b.unsigned, 16)));
     
     print("ext use");
-    sha1.init();
-    sha1.update({#61.byte, #62.byte, #63.byte, #64.byte});
-    sha1.update({#62.byte, #63.byte, #64.byte, #65.byte});
-    sha1.update({#63.byte, #64.byte, #65.byte, #66.byte});
-    sha1.update({#64.byte, #65.byte, #66.byte, #67.byte});
-    sha1.update({#65.byte, #66.byte, #67.byte, #68.byte});
-    sha1.update({#66.byte, #67.byte, #68.byte, #69.byte});
-    sha1.update({#67.byte, #68.byte, #69.byte, #6a.byte});
-    sha1.update({#68.byte, #69.byte, #6a.byte, #6b.byte});
-    sha1.update({#69.byte, #6a.byte, #6b.byte, #6c.byte});
-    sha1.update({#6a.byte, #6b.byte, #6c.byte, #6d.byte});
-    sha1.update({#6b.byte, #6c.byte, #6d.byte, #6e.byte});
-    sha1.update({#6c.byte, #6d.byte, #6e.byte, #6f.byte});
-    sha1.update({#6d.byte, #6e.byte, #6f.byte, #70.byte});
-    sha1.update({#6e.byte, #6f.byte, #70.byte, #71.byte});
-    print(sha1.finish().collect((b)=>formatInteger(b.unsigned, 16)));
+    sha256.reset();
+    sha256.update({#61.byte, #62.byte, #63.byte, #64.byte});
+    sha256.update({#62.byte, #63.byte, #64.byte, #65.byte});
+    sha256.update({#63.byte, #64.byte, #65.byte, #66.byte});
+    sha256.update({#64.byte, #65.byte, #66.byte, #67.byte});
+    sha256.update({#65.byte, #66.byte, #67.byte, #68.byte});
+    sha256.update({#66.byte, #67.byte, #68.byte, #69.byte});
+    sha256.update({#67.byte, #68.byte, #69.byte, #6a.byte});
+    sha256.update({#68.byte, #69.byte, #6a.byte, #6b.byte});
+    sha256.update({#69.byte, #6a.byte, #6b.byte, #6c.byte});
+    sha256.update({#6a.byte, #6b.byte, #6c.byte, #6d.byte});
+    sha256.update({#6b.byte, #6c.byte, #6d.byte, #6e.byte});
+    sha256.update({#6c.byte, #6d.byte, #6e.byte, #6f.byte});
+    sha256.update({#6d.byte, #6e.byte, #6f.byte, #70.byte});
+    sha256.update({#6e.byte, #6f.byte, #70.byte, #71.byte});
+    print(sha256.finish().collect((b)=>formatInteger(b.unsigned, 16)));
     
     print("3 byte message internal");
-    sha1.processBlock({#61.byte, #62.byte, #63.byte, #80.byte
+    sha256.processBlock({#61.byte, #62.byte, #63.byte, #80.byte
     ,#00.byte, #00.byte, #00.byte, #00.byte
     ,#00.byte, #00.byte, #00.byte, #00.byte
     ,#00.byte, #00.byte, #00.byte, #00.byte
@@ -202,11 +221,11 @@ shared void test2b1()
     ,#00.byte, #00.byte, #00.byte, #00.byte
     ,#00.byte, #00.byte, #00.byte, #00.byte
     ,#00.byte, #00.byte, #00.byte, #18.byte});
-    print(sha1.finishedResult.collect((b)=>formatInteger(b.unsigned, 16)));
+    print(sha256.finishedResult.collect((b)=>formatInteger(b.unsigned, 16)));
     
     print("56 byte message internal");
-    sha1.init();
-    sha1.processBlock({#61.byte, #62.byte, #63.byte, #64.byte
+    sha256.reset();
+    sha256.processBlock({#61.byte, #62.byte, #63.byte, #64.byte
     ,#62.byte, #63.byte, #64.byte, #65.byte
     ,#63.byte, #64.byte, #65.byte, #66.byte
     ,#64.byte, #65.byte, #66.byte, #67.byte
@@ -222,7 +241,7 @@ shared void test2b1()
     ,#6e.byte, #6f.byte, #70.byte, #71.byte
     ,#80.byte, #00.byte, #00.byte, #00.byte
     ,#00.byte, #00.byte, #00.byte, #00.byte});
-    sha1.processBlock({
+    sha256.processBlock({
      #00.byte, #00.byte, #00.byte, #00.byte
     ,#00.byte, #00.byte, #00.byte, #00.byte
     ,#00.byte, #00.byte, #00.byte, #00.byte
@@ -239,12 +258,12 @@ shared void test2b1()
     ,#00.byte, #00.byte, #00.byte, #00.byte
     ,#00.byte, #00.byte, #00.byte, #00.byte
     ,#00.byte, #00.byte, #01.byte, #c0.byte});
-     print(sha1.finishedResult.collect((b)=>formatInteger(b.unsigned, 16)));
+     print(sha256.finishedResult.collect((b)=>formatInteger(b.unsigned, 16)));
 }
 
-shared void test2_1()
+shared void test2()
 {
-//    da39a3ee5e6b4b0d3255bfef95601890afd80709
-    value sha256 = createSha1();
-    print(sha256.finish().collect((b)=>formatInteger(b.unsigned, 16)));
+//    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    value sha256 = createSha256();
+    print(sha256.digest().collect((b)=>formatInteger(b.unsigned, 16)));
 }

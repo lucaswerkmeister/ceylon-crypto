@@ -2,7 +2,24 @@
 
 Implementation of cryptographic algorithms/mechanisms in the Ceylon language.
 
-For a start, the SHA-256 algorithm is implemented.
+SHA-1, SHA-256 and RSA signature (RSASSA-PSS from PKCS #1) algorithms and schemes are implemented.
+
+The implementation section still needs much cleanup.
+
+Note that IANAC (I am not a cryptologist), so this will surely be flawed in some security relevant way.
+
+**Do not use in production and don't rely on it in any expensive way whatsoever!**
+
+## Changes
+* now SHA-1 is also implemented to be able to use the test vectors for PKCS #1
+* new interface `MessageDigester`.
+* implemented RSA signature according to PKCS #1 v2.2, signature scheme RSASSA-PSS
+* Defined API interfaces/classes for hash functions and signatures as well as
+  asymmetric keys. Modelled after the Java package java.security.
+* split up to 3 modules: API, implementation and "service manager" to avoid cycles in the
+  module dependencies (still in search of a good name for the "service manager" module)
+* added separate test-source directory for tests (still need to move several tests from source to test-source)
+* added examples directory with example for RSA signature
 
 ## SHA-256
 
@@ -42,15 +59,36 @@ That is:
        
    3. Obtain the resulting value---message digest (hash),
        signature value, whatever the algorithm is intended
-       for---by calling `finish()`.
+       for---by calling `digest({Byte*})`.
+      The argument to `digest()` is optional, defaulting
+      to an empty message part.
        
    4. You can then reuse the algorithm object for another
        message by continuing with `update` calls.
        
-   Calling `update` and then `finish` can
-   be combined by calling `updateFinish`.
+   To process a message with one call, don't use `update` and
+   just call `digest(message)`.
    
-   `init()` clears the message from the algorithm so that
+   `reset()` clears the message from the algorithm so that
    the next `update` will start a new message. This is normally
    not needed as a new instance will start initialized, and after calling
    `finish()` the instance will also be initialized.
+
+## SHA-1
+
+Implemented from the [Wikipedia entry](https://en.wikipedia.org/wiki/SHA-1).
+
+### Usage
+
+like SHA-256, use 
+
+`value sha1 = createSha1();`
+
+## RSA
+
+see `examples/de.dlkw.ccrypto.examples/signature.ceylon`
+
+The JavaScript implementation of class `Whole` seems to be incorrect. While the
+implemented PKCS #1 test vectors pass with the Java runtime, on JavaScript they fail,
+running very, very, veeery long. I didn't investigate further yet.
+

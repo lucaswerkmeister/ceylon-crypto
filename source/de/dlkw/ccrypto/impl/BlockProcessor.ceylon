@@ -1,3 +1,8 @@
+import de.dlkw.ccrypto.api {
+    MessageDigester,
+    UpdatingProcessor
+}
+
 """
    Common interface for block-oriented algorithms like
    message digests or signatures.
@@ -25,31 +30,23 @@
    not needed as a new instance will start initialized, and after calling
    `finish()` the instance will also be initialized.
 """
-shared interface BlockProcessor
+shared interface BlockProcessor<P> of P
+        satisfies UpdatingProcessor<P>
+        given P satisfies BlockProcessor<P>
 {
     shared formal Integer blockSize;
     shared formal Integer? maxMessageLength;
     
-    shared formal BlockProcessor init();
-    shared formal BlockProcessor update({Byte*} message);
-    shared formal Byte[] finish();
-
-    shared Byte[] updateFinish({Byte*} message)
-        => update(message).finish();
+    //shared formal BlockProcessor<P> init();
 }
 
-shared interface Digest
-        satisfies BlockProcessor
-{
-    "Length of the resulting digest, in bits. This is supposed to be the same for every input message. Will always be positive."
-    shared formal Integer digestLengthBits;
+shared interface BlockProcessorDigest
+        satisfies BlockProcessor<BlockProcessorDigest> & MessageDigester
+{}
 
-    "Length of the resulting digest, in octets (8 bit bytes). This is supposed to be the same for every input message. Will always be positive."    
-    shared Integer digestLengthOctets => (digestLengthBits - 1) / 8 + 1;
-}
-
-abstract class AbstractBlockProcessor(blockSize)
-        satisfies BlockProcessor
+shared abstract class AbstractBlockProcessor<P>(blockSize) of P
+        satisfies BlockProcessor<P>
+        given P satisfies AbstractBlockProcessor<P>
 {
     shared actual Integer blockSize;
     
@@ -60,29 +57,30 @@ abstract class AbstractBlockProcessor(blockSize)
 
 //    variable Integer validBitsInLastByte = 8;
     
-    shared default actual AbstractBlockProcessor init()
+    shared default actual AbstractBlockProcessor<P> reset()
     {
         _numBytesUsed = 0;
         return this;
     }
 
-    shared actual AbstractBlockProcessor update({Byte*} message)
+    shared actual P update({Byte*} messagePart)
     {
-        for (next in message) {
+        for (next in messagePart) {
             Integer bufPos = _numBytesUsed++ % blockSize;
             block.set(bufPos, next);
             if (bufPos == blockSize - 1) {
                 processBlock(block);
             }
         }
-        return this;
+        return this of P;
     }
 
-    shared actual Byte[] finish()
+    shared Byte[] finish({Byte*} messagePart = empty)
     {
+        update(messagePart);
         padLast();
         value result = finishedResult;
-        init();
+        reset();
         return result;
     }
     
@@ -91,9 +89,10 @@ abstract class AbstractBlockProcessor(blockSize)
     shared formal Byte[] finishedResult;
 }
 
-abstract class AbstractDigest(blockSize, digestLengthBits)
-        extends AbstractBlockProcessor(blockSize)
-        satisfies Digest
+shared abstract class AbstractDigest(blockSize, digestLengthBits)
+        extends AbstractBlockProcessor<AbstractDigest>(blockSize)
+        satisfies MessageDigester
+        //satisfies BlockProcessorDigest
 {
     Integer blockSize;
     shared actual Integer digestLengthBits;

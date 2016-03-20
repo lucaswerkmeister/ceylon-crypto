@@ -3,13 +3,15 @@ import ceylon.test {
     parameters
 }
 
-import de.dlkw.ccrypto {
-    RsaCrtPrivateKey,
+import de.dlkw.ccrypto.impl {
     RsaSsaPssSign,
     os2ip,
     RsaSsaPssVerify,
-    RsaPublicKey,
-    RsaExponentPrivateKey
+    RsaCrtPrivateKeyImpl,
+    RsaExponentPrivateKeyImpl,
+    RsaPublicKeyImpl,
+    Sha1,
+    MGF1
 }
 
                    //# --------------------------------
@@ -253,20 +255,20 @@ class TestVectors1025()
            
         value nW = os2ip(p) * os2ip(q);
         
-        value privKey1 = RsaCrtPrivateKey(os2ip(p), os2ip(q), os2ip(dP), os2ip(dQ), os2ip(qInv));
-        RsaSsaPssSign rsaSig1 = RsaSsaPssSign(privKey1, salt);
-        value sig1 = rsaSig1.update(message).finish();
+        value privKey1 = RsaCrtPrivateKeyImpl(os2ip(p), os2ip(q), os2ip(dP), os2ip(dQ), os2ip(qInv));
+        RsaSsaPssSign rsaSig1 = RsaSsaPssSign(privKey1, Sha1(), MGF1(Sha1()), salt, 20);
+        value sig1 = rsaSig1.update(message).sign();
         
         assert (sig1 == signature);
         
-        value privKey2 = RsaExponentPrivateKey(os2ip(d), nW);
-        RsaSsaPssSign rsaSig2 = RsaSsaPssSign(privKey2, salt);
-        value sig2 = rsaSig2.update(message).finish();
+        value privKey2 = RsaExponentPrivateKeyImpl(os2ip(d), nW);
+        RsaSsaPssSign rsaSig2 = RsaSsaPssSign(privKey2, Sha1(), MGF1(Sha1()), salt, 20);
+        value sig2 = rsaSig2.update(message).sign();
         
         assert (sig2 == signature);
         
-        value pubKey = RsaPublicKey(os2ip(e), nW);
-        RsaSsaPssVerify rsaVerify = RsaSsaPssVerify(pubKey);
+        value pubKey = RsaPublicKeyImpl(os2ip(e), nW);
+        RsaSsaPssVerify rsaVerify = RsaSsaPssVerify(pubKey, Sha1(), MGF1(Sha1()), 20);
         rsaVerify.update(message);
         assert (rsaVerify.verify(signature));
     }

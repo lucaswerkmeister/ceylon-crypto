@@ -2,20 +2,23 @@ import ceylon.test {
     test,
     parameters
 }
-import de.dlkw.ccrypto {
-    RsaCrtPrivateKey,
-    RsaSsaPssSign,
-    os2ip,
-    RsaPublicKey,
-    RsaExponentPrivateKey,
-    hexdump,
-    RsaSsaPssVerify
-}
 import ceylon.whole {
     parseWhole,
     one,
     wholeNumber,
     formatWhole
+}
+
+import de.dlkw.ccrypto.impl {
+    RsaSsaPssSign,
+    os2ip,
+    hexdump,
+    RsaSsaPssVerify,
+    RsaExponentPrivateKeyImpl,
+    RsaCrtPrivateKeyImpl,
+    RsaPublicKeyImpl,
+    Sha1,
+    MGF1
 }
 
 {[Byte[], Byte[], Byte[]]*} messagesInt => {[
@@ -136,21 +139,21 @@ class TestVectorsInternal()
            #aa.byte, #c7.byte, #c5.byte, #fe.byte, #a1.byte, #4f.byte, #22.byte, #97.byte, #66.byte, #2b.byte, #84.byte, #81.byte, #2c.byte, #4d.byte, #ef.byte, #c4.byte,  
            #9a.byte, #80.byte, #25.byte, #ab.byte, #43.byte, #82.byte, #28.byte, #6b.byte, #e4.byte, #c0.byte, #37.byte, #88.byte, #dd.byte, #01.byte, #d6.byte, #9f.byte];
 
-        value privKey1 = RsaExponentPrivateKey(dW, pW * qW);
+        value privKey1 = RsaExponentPrivateKeyImpl(dW, pW * qW);
 
-        RsaSsaPssSign rsaSig1 = RsaSsaPssSign(privKey1, salt);
-        value sig1 = rsaSig1.update(message).finish();
+        RsaSsaPssSign rsaSig1 = RsaSsaPssSign(privKey1, Sha1(), MGF1(Sha1()), salt, 20);
+        value sig1 = rsaSig1.update(message).sign();
         
         assert (sig1 == signature);
         
-        value privKey2 = RsaCrtPrivateKey(pW, qW, os2ip(dP), os2ip(dQ), os2ip(qInv));
-        RsaSsaPssSign rsaSig2 = RsaSsaPssSign(privKey2, salt);
-        value sig2 = rsaSig2.update(message).finish();
+        value privKey2 = RsaCrtPrivateKeyImpl(pW, qW, os2ip(dP), os2ip(dQ), os2ip(qInv));
+        RsaSsaPssSign rsaSig2 = RsaSsaPssSign(privKey2, Sha1(), MGF1(Sha1()), salt, 20);
+        value sig2 = rsaSig2.update(message).sign();
         
         assert (sig2 == signature);
 
-        value pubKey = RsaPublicKey(os2ip(e), privKey1.modulus);
-        RsaSsaPssVerify rsaVerify = RsaSsaPssVerify(pubKey);
+        value pubKey = RsaPublicKeyImpl(os2ip(e), privKey1.modulus);
+        RsaSsaPssVerify rsaVerify = RsaSsaPssVerify(pubKey, Sha1(), MGF1(Sha1()), 20);
         rsaVerify.update(message);
         assert (rsaVerify.verify(sig2));
     }
