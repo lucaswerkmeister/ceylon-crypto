@@ -11,7 +11,9 @@ Note that IANAC (I am not a cryptologist), so this will surely be flawed in some
 **Do not use in production and don't rely on it in any expensive way whatsoever!**
 
 ## Changes
-* now SHA-1 is also implemented to be able to use the test vectors for PKCS #1
+* added some ASN.1 (primitives and PKCS #1) stuff
+* implemented RSA signature scheme RSASSA-PKCS1-v1_5
+* now SHA-1 is also implemented, to be able to use the test vectors for PKCS #1
 * new interface `MessageDigester`.
 * implemented RSA signature according to PKCS #1 v2.2, signature scheme RSASSA-PSS
 * Defined API interfaces/classes for hash functions and signatures as well as

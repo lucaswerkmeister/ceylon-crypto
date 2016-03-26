@@ -1,3 +1,12 @@
+import de.dlkw.ccrypto.api.asn1 {
+    Asn1Value,
+    asn1Null,
+    ObjectIdentifier
+}
+import de.dlkw.ccrypto.api.asn1.pkcs {
+    AlgorithmIdentifier
+}
+
 shared interface UpdatingProcessor<out P> of P
         given P satisfies UpdatingProcessor<P>
 {
@@ -30,4 +39,11 @@ shared interface MessageDigester
      
      This is a convenience method that simply calls `finish(messagePart)`."
     shared formal Byte[] digest({Byte*} messagePart = empty);
+
+    shared formal ObjectIdentifier objectIdentifier;
+    
+    "defaults to NULL"
+    shared default Asn1Value parameters => asn1Null;
+    
+    shared formal AlgorithmIdentifier algorithmIdentifier;
 }

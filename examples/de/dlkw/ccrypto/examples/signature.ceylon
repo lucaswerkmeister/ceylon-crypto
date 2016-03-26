@@ -19,13 +19,15 @@ import de.dlkw.ccrypto.impl {
 }
 import de.dlkw.ccrypto.svcmgr {
     createSha256WithRsaAndMgf1Sha256Verifier,
-    createSha256WithRsaAndMgf1Sha256Signer
+    createSha256WithRsaAndMgf1Sha256Signer,
+    createSha256WithRsaSigner,
+    createSha256WithRsaVerifier
 }
 
 "Illustrates the use of RSA signature according to PKCS #1 v2.2, signature scheme RSASSA-PSS,
  using SHA-256 as hash algorithm and MGF1 with SHA-256 as mask generating function, together with a
  salt length of 32 (being the hash length of SHA-256)."
-shared void run() {
+shared void runSigRsaSsaPss() {
     value keyPair = createRsaKeyPair();
     value privateKey = keyPair.privateKey;
     value publicKey = keyPair.publicKey;
@@ -38,6 +40,24 @@ shared void run() {
     value signature = signer.sign(byteMsg);
     
     value verifier = createSha256WithRsaAndMgf1Sha256Verifier(publicKey);
+    assert (verifier.verify(signature, byteMsg));
+}
+
+"Illustrates the use of RSA signature according to PKCS #1 v2.2, signature scheme RSASSA-PKCS1-v1_5,
+ using SHA-1 as hash algorithm."
+shared void runSigRsaSsaPkcs15() {
+    value keyPair = createRsaKeyPair();
+    value privateKey = keyPair.privateKey;
+    value publicKey = keyPair.publicKey;
+    
+    String msg = "The adventures of Gregary Peccary";
+    value byteMsg = utf8.encode(msg);
+    
+    // you can use sha1 instead of sha256 below, if you must.
+    value signer = createSha256WithRsaSigner(privateKey);
+    value signature = signer.sign(byteMsg);
+    
+    value verifier = createSha256WithRsaVerifier(publicKey);
     assert (verifier.verify(signature, byteMsg));
 }
 

@@ -106,7 +106,6 @@ shared class RsaSsaPssVerify(key, outerHash, mgf, saltLength)
     
     shared actual void reset()
     {
-        outerHash.reset();
         emsa.init();
     }
 
@@ -127,7 +126,7 @@ shared class RsaSsaPssVerify(key, outerHash, mgf, saltLength)
         print("verify em:");
         hexdump(em);
 
-        return emsa.update(messagePart).verify(em);
+        return emsa.update(messagePart).verify(em) == consistent;
     }
 }
 
@@ -142,3 +141,99 @@ shared RsaSsaPssSign sha256WithRsaAndMgf1Sha256Signer(RsaPrivateKey key, {Byte*}
 
 shared RsaSsaPssVerify sha256WithRsaAndMgf1Sha256Verifier(RsaPublicKey key, Integer saltLength)
         => RsaSsaPssVerify(key, createSha256(), MGF1(createSha256()), saltLength);
+
+shared class RsaSsaPkcs15Sign(key, digester)
+        satisfies Signer<RsaPrivateKey>
+{
+    variable RsaPrivateKey key;
+    MessageDigester digester;
+    
+    value emsa = EmsaPkcs1_v1_5(digester, key.octetLength);
+
+    shared actual void init(RsaPrivateKey key)
+    {
+        this.key = key;
+        reset();
+    }
+    
+    shared actual void reset()
+    {
+        emsa.init(key.octetLength);
+    }
+    
+    shared actual RsaSsaPkcs15Sign update({Byte*} messagePart)
+    {
+        emsa.update(messagePart);
+        return this;
+    }
+    
+    shared actual Byte[] sign({Byte*} messagePart)
+    {
+        value em = emsa.update(messagePart).finish();
+        print("em: ``em.size``");
+        hexdump(em);
+        
+        value m = os2ip(em);
+        value s = Rsa().rsaSp1(key, m);
+        print("m: ``formatWhole(m, 16)``");
+        print("s: ``formatWhole(s, 16)``");
+        
+        return i2osp(s, key.octetLength);
+    }
+}
+
+shared class RsaSsaPkcs15Verify(key, digester)
+        satisfies SignatureVerifier<RsaPublicKey>
+{
+    variable RsaPublicKey key;
+    MessageDigester digester;
+
+    value emsa = EmsaPkcs1_v1_5(digester, key.octetLength);
+    
+    shared actual void init(RsaPublicKey key)
+    {
+        this.key = key;
+        reset();
+    }
+    
+    shared actual void reset()
+    {
+        emsa.init(key.octetLength);
+    }
+    
+    shared actual RsaSsaPkcs15Verify update({Byte*} messagePart)
+    {
+        emsa.update(messagePart);
+        return this;
+    }
+    
+    shared actual Boolean verify(Byte[] signature, {Byte*} messagePart)
+    {
+        value s = os2ip(signature);
+        
+        value m = Rsa().rsaVp1(key, s);
+        print("verify m: ``formatWhole(m, 16)``");
+        
+        value em = i2osp(m, key.octetLength);
+        print("verify em:");
+        hexdump(em);
+        
+        value emPrime = emsa.update(messagePart).finish();
+        print("verify emPrime:");
+        hexdump(emPrime);
+        
+        return em == emPrime;
+    }
+}
+
+shared RsaSsaPkcs15Sign sha1WithRsaSigner(RsaPrivateKey key)
+        => RsaSsaPkcs15Sign(key, createSha1());
+
+shared RsaSsaPkcs15Verify sha1WithRsaVerifier(RsaPublicKey key)
+        => RsaSsaPkcs15Verify(key, createSha1());
+
+shared RsaSsaPkcs15Sign sha256WithRsaSigner(RsaPrivateKey key)
+        => RsaSsaPkcs15Sign(key, createSha256());
+
+shared RsaSsaPkcs15Verify sha256WithRsaVerifier(RsaPublicKey key)
+        => RsaSsaPkcs15Verify(key, createSha256());

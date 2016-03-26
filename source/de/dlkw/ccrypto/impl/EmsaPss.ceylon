@@ -5,10 +5,12 @@ import de.dlkw.ccrypto.api {
 
 Byte[8] z8 = [ 0.byte, 0.byte, 0.byte, 0.byte, 0.byte, 0.byte, 0.byte, 0.byte ];
 
-class EmsaPssSign(digest, mgf, saltGenerator, sLen, emBit)
+class MessageTooLongException() extends Exception(){}
+class EncodingError() extends Exception(){}
+class EmsaPssSign(digester, mgf, saltGenerator, sLen, emBit)
 {
-    MessageDigester digest;
-    digest.reset();
+    MessageDigester digester;
+    digester.reset();
     
     MaskGeneratingFunction mgf;
     
@@ -22,31 +24,37 @@ class EmsaPssSign(digest, mgf, saltGenerator, sLen, emBit)
     Integer emLen = (emBit - 1) / 8 + 1;
     print("#SemBits: ``emBit``, emLen: ``emLen``");
 
-    Integer hLen => digest.digestLengthOctets;
+    Integer hLen => digester.digestLengthOctets;
     assert (emLen >= hLen + sLen + 2);
     print("#SsLen: ``sLen``, hLen: ``hLen``");
     
     shared EmsaPssSign init()
     {
-        digest.reset();
+        digester.reset();
         return this;
     }
     
+    throws(`class MessageTooLongException`, "the message is too long for the digester")
     shared EmsaPssSign update({Byte*} messagePart)
     {
-        digest.update(messagePart);
+        digester.update(messagePart);
         return this;
     }
     
+    throws(`class MessageTooLongException`, "the message is too long for the digester")
     shared Byte[] finish()
     {
-        value mHash = digest.digest();
+        Byte[] mHash = digester.digest();
         print("#SmHash:");
         hexdump(mHash);
+        
+        if (emLen < hLen + sLen + 2) {
+            throw EncodingError();
+        }
 
         // DON'T forget to take the sequence() of the take result
         // lest each time you access salt, another value is produced.
-        value salt = saltGenerator.take(sLen).sequence();
+        Byte[] salt = saltGenerator.take(sLen).sequence();
         print("#Ssalt:");
         hexdump(salt);
         
@@ -54,7 +62,7 @@ class EmsaPssSign(digest, mgf, saltGenerator, sLen, emBit)
         print("#SmPrime:");
         hexdump(mPrime);
         
-        value h = digest.digest(mPrime);
+        Byte[] h = digester.digest(mPrime);
         print("#Sh:");
         hexdump(h);
         
@@ -62,7 +70,7 @@ class EmsaPssSign(digest, mgf, saltGenerator, sLen, emBit)
         print("#Sdb:");
         hexdump(db);
         
-        value dbMask = mgf.mask(h, emLen - hLen - 1);
+        Byte[] dbMask = mgf.mask(h, emLen - hLen - 1);
         print("#SdbMask:");
         hexdump(dbMask);
         
@@ -78,37 +86,80 @@ class EmsaPssSign(digest, mgf, saltGenerator, sLen, emBit)
     }
 }
 
-class EmsaPssVerify(digest, mgf, sLen, emBits)
+abstract class VerificationResult()
+        of consistent | inconsistent
+{}
+
+object consistent extends VerificationResult(){}
+object inconsistent extends VerificationResult(){}
+
+
+class EmsaPssVerify(digester, mgf, sLen, emBits)
 {
-    MessageDigester digest;
+    MessageDigester digester;
     MaskGeneratingFunction mgf;
     Integer sLen;
     
     Integer emBits;
     Integer emLen = (emBits - 1) / 8 + 1;
 
-    Integer hLen = digest.digestLengthOctets;
+    Integer hLen = digester.digestLengthOctets;
 
     Integer checkBits = 8 * emLen - emBits;
     value checkBitsMask = (1.leftLogicalShift(checkBits) - 1).leftLogicalShift(8 - checkBits).byte;
+    
+    variable Boolean messageWasTooLong = false;
 
     shared EmsaPssVerify init()
     {
-        digest.reset();
+        digester.reset();
         return this;
     }
     
+    throws(`class MessageTooLongException`, "the message is too long for the digester")
     shared EmsaPssVerify update({Byte*} messagePart)
     {
-        digest.update(messagePart);
+        try {
+            digester.update(messagePart);
+        }
+        catch (MessageTooLongException e) {
+            messageWasTooLong = true;
+        }
         return this;
     }
     
-    shared Boolean verify(Byte[] em)
+    shared VerificationResult verify(Byte[] em)
     {
-        assert (em.size == emLen);
-        assert (exists bc = em.last, bc == #bc.byte);
+        // 1.
+        if (messageWasTooLong) {
+            init();
+            return inconsistent;
+        }
         
+        // 2.
+        Byte[] mHash = digester.digest();
+        print("#VmHash:");
+        hexdump(mHash);
+
+        // 3.
+        if (emLen < hLen + sLen + 2) {
+            init();
+            return inconsistent;
+        }
+        
+        // (precondition)
+        assert (em.size == emLen);
+        
+        // 4.
+        if (exists bc = em.last, bc == #bc.byte) {
+            // good path, can this be re-formulated?
+        }
+        else {
+            init();
+            return inconsistent;
+        }
+
+        // 5.
         value maskedDb = em[0:emLen - hLen - 1];
         print("#VmaskedDb:");
         hexdump(maskedDb);
@@ -117,39 +168,54 @@ class EmsaPssVerify(digest, mgf, sLen, emBits)
         print("#Vh:");
         hexdump(h);
         
-        assert (exists mdb0 = maskedDb[0], mdb0.and(checkBitsMask) == 0.byte);
-        
+        // 6.
+        assert (exists mdb0 = maskedDb[0]);
+        if (mdb0.and(checkBitsMask) != 0.byte) {
+            init();
+            return inconsistent;
+        }
+
+        // 7.
         value dbMask = mgf.mask(h, emLen - hLen - 1);
         print("#VdbMask;");
         hexdump(dbMask);
         
+        // 8.
         value db = Array(zipPairs(maskedDb, dbMask).map((el) => el[0].xor(el[1])));
         print("#Vdb");
         hexdump(db);
-        
+
+        // 9.
         assert (exists first = db.first);
         db.set(0, first.and(checkBitsMask.not));
         
-        assert (db[0:emLen - hLen - sLen - 2].every((b) => b == 0.byte));
-        assert (exists b = db[emLen - hLen - sLen - 2], b == 1.byte);
-        
+        // 10.
+        if (!db[0:emLen - hLen - sLen - 2].every((b) => b == 0.byte)) {
+            init();
+            return inconsistent;
+        }
+        assert (exists b = db[emLen - hLen - sLen - 2]);
+        if (b != 1.byte) {
+            init();
+            return inconsistent;
+        }
+
+        // 11.
         value salt = db.terminal(sLen);
         print("#Vsalt:");
         hexdump(salt);
         
-        value mHash = digest.digest();
-        print("#VmHash:");
-        hexdump(mHash);
-        
+        // 12.
         value mPrime = z8.chain(mHash).chain(salt);
         print("#VmPrime:");
-        hexdump(mPrime.sequence());
+        hexdump(mPrime);
         
-        value hPrime = digest.digest(mPrime);
+        // 13.
+        value hPrime = digester.digest(mPrime);
         print("#VhPrime:");
         hexdump(hPrime);
         
-        return h == hPrime;
+        return if (h == hPrime) then consistent else inconsistent;
     }
 }
 
