@@ -5,7 +5,7 @@ import ceylon.whole {
 shared interface PrivateKey{}
 shared interface PublicKey{}
 
-shared class KeyPair<Private, Public>(privateKey, publicKey)
+shared class KeyPair<out Private, out Public>(privateKey, publicKey)
         given Private satisfies PrivateKey
 {
     shared Private privateKey;
