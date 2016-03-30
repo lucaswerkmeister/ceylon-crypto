@@ -32,7 +32,7 @@ shared void runSigRsaSsaPss() {
     value privateKey = keyPair.privateKey;
     value publicKey = keyPair.publicKey;
 
-    String msg = "The adventures of Gregary Peccary";
+    String msg = "The adventures of Greggery Peccary";
     value byteMsg = utf8.encode(msg);
 
     // we don't have a cryptographical random number generator yet, so use a shabby default ;-) random number generator
@@ -44,13 +44,13 @@ shared void runSigRsaSsaPss() {
 }
 
 "Illustrates the use of RSA signature according to PKCS #1 v2.2, signature scheme RSASSA-PKCS1-v1_5,
- using SHA-1 as hash algorithm."
+ using SHA-256 as hash algorithm."
 shared void runSigRsaSsaPkcs15() {
     value keyPair = createRsaKeyPair();
     value privateKey = keyPair.privateKey;
     value publicKey = keyPair.publicKey;
     
-    String msg = "The adventures of Gregary Peccary";
+    String msg = "The adventures of Greggery Peccary";
     value byteMsg = utf8.encode(msg);
     
     // you can use sha1 instead of sha256 below, if you must.

@@ -1,1 +1,1 @@
-shared package de.dlkw.ccrypto.examples;
+package de.dlkw.ccrypto.examples;
