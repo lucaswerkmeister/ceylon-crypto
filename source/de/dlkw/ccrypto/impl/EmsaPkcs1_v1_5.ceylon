@@ -37,8 +37,6 @@ class EmsaPkcs1_v1_5(digester, emLen)
     {
         // 1.
         Byte[] h = digester.digest();
-        print("#Sh:");
-        hexdump(h);
         
         // 2.
         Byte[] t = digestInfoEncodedDER(digester.algorithmIdentifier, h);

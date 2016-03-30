@@ -23,7 +23,8 @@ import de.dlkw.ccrypto.api {
     RsaPrivateKey,
     KeyPair,
     RsaPublicKey,
-    SignatureVerifier
+    SignatureVerifier,
+    RsaCrtPrivateKey
 }
 import de.dlkw.ccrypto.impl {
     os2ip,
@@ -54,7 +55,6 @@ import java.security.interfaces {
 
 Byte[] conv(String s) {
     value pieces = s.normalized.split((c) => c.whitespace);
-    print(":: ``pieces``");
     value c = [ for (b in pieces) parseInteger(b, 16)?.byte ];
     assert (c.every((el) => el exists));
     return c.coalesced.sequence();
@@ -108,26 +108,40 @@ test
 shared void cmpTest(parameters(`value keypairs`) JKeyPair jKeyPair,
         parameters(`value messages`) Byte[] message)
 {
-    KeyPair<RsaPrivateKey, RsaPublicKey> keyPair = j2cKeyPair(jKeyPair);
-    
-    Signer<RsaPrivateKey> signer = sha1WithRsaSigner(keyPair.privateKey);
-    Byte[] cSignature = signer.sign(message);
-    
-    SignatureVerifier<RsaPublicKey> verifier = sha1WithRsaVerifier(keyPair.publicKey);
-    assert (verifier.verify(cSignature, message));
-    
-    Signature jSigner = Signature.getInstance("sha1WithRSA");
-    jSigner.initSign(jKeyPair.private);
-    jSigner.update(javaByteArray(Array(message)));
-    Byte[] jSignature = toByteArray(jSigner.sign()).sequence();
-    
-    assert (jSignature == cSignature);
+    variable RsaCrtPrivateKey? privateKey = null;
+    try {
+        KeyPair<RsaCrtPrivateKey, RsaPublicKey> keyPair = j2cKeyPair(jKeyPair);
+        
+        privateKey = keyPair.privateKey;
+        Signer<RsaPrivateKey> signer = sha1WithRsaSigner(keyPair.privateKey);
+        Byte[] cSignature = signer.sign(message);
+        
+        SignatureVerifier<RsaPublicKey> verifier = sha1WithRsaVerifier(keyPair.publicKey);
+        assert (verifier.verify(cSignature, message));
+        
+        Signature jSigner = Signature.getInstance("sha1WithRSA");
+        jSigner.initSign(jKeyPair.private);
+        jSigner.update(javaByteArray(Array(message)));
+        Byte[] jSignature = toByteArray(jSigner.sign()).sequence();
+        
+        assert (jSignature == cSignature);
+    }
+    catch (Throwable t) {
+        print("failed signature:");
+        hexdump(message);
+        assert (is RsaCrtPrivateKey pk = privateKey);
+        print("p=``pk.p``");
+        print("q=``pk.q``");
+        print("dP=``pk.dP``");
+        print("dQ=``pk.dQ``");
+        print("qInv=``pk.qInv``");
+        throw t;
+    }
 }
 
-KeyPair<RsaPrivateKey, RsaPublicKey> j2cKeyPair(JKeyPair jKeyPair)
+KeyPair<RsaCrtPrivateKey, RsaPublicKey> j2cKeyPair(JKeyPair jKeyPair)
 {
     value privateKey = jKeyPair.private;
-    print(type(privateKey));
     assert (is JRSAPrivateCrtKey privateKey);
     RsaCrtPrivateKeyImpl s = RsaCrtPrivateKeyImpl(wholeFromBigInteger(privateKey.primeP),
         wholeFromBigInteger(privateKey.primeQ),
@@ -136,7 +150,7 @@ KeyPair<RsaPrivateKey, RsaPublicKey> j2cKeyPair(JKeyPair jKeyPair)
         wholeFromBigInteger(privateKey.crtCoefficient));
     RsaPublicKeyImpl pub = RsaPublicKeyImpl(wholeFromBigInteger(privateKey.publicExponent),
         wholeFromBigInteger(privateKey.modulus));
-    KeyPair<RsaPrivateKey, RsaPublicKey> cKeyPair = KeyPair(s, pub);
+    KeyPair<RsaCrtPrivateKey, RsaPublicKey> cKeyPair = KeyPair(s, pub);
     return cKeyPair;
 }
 
@@ -144,16 +158,12 @@ test
 shared void test01()
 {
     value message = conv(mS);
-    hexdump(message);
     value d = conv(dS);
-    hexdump(d);
     value n = conv(nS);
-    hexdump(n);
     
     value privKey = RsaExponentPrivateKeyImpl(os2ip(d), os2ip(n));
     Signer<RsaPrivateKey> rsaSig = RsaSsaPkcs15Sign(privKey, Sha1());
     value sig = rsaSig.update(message).sign();
-    hexdump(sig);
     
     value jSig = Signature.getInstance("sha1WithRsa");
     
@@ -165,8 +175,6 @@ shared void test01()
     jSig.initSign(jKey);
     jSig.update(createJavaByteArray(message));
     value ss = jSig.sign().array.map((b) => b.byteValue()).sequence();
-    print("jsig");
-    hexdump(ss);
     
     value jd = parseWhole(jKey.privateExponent.string);
     value jn = parseWhole(jKey.modulus.string);
@@ -179,7 +187,6 @@ shared void test01()
     value cKey = RsaExponentPrivateKeyImpl(jd, jn);
     rsaSig.init(cKey);
     value cs = rsaSig.sign(message);
-    hexdump(cs);
     assert (cs.sequence() == ss.sequence());
     
     value cPub = RsaPublicKeyImpl(je, jn);
