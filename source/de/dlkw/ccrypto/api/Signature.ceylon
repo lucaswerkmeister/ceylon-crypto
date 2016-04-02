@@ -1,9 +1,8 @@
-shared interface Signer<in Key>
-        satisfies UpdatingProcessor<Signer<Key>>
-        given Key satisfies PrivateKey
+"Calculates a cryptographic signature of a message."
+by("Dirk Lattermann")
+shared interface Signer
+        satisfies UpdatingProcessor<Signer>
 {
-    shared formal void init(Key key);
-    
     "Calculates and returns the signature value from the internal state after updating it with a final message part.
      
      After the calculation, the internal state is reset so this object can be reused immediately to calculate the
@@ -13,11 +12,17 @@ shared interface Signer<in Key>
     shared formal Byte[] sign({Byte*} messagePart = empty);
 }
 
-shared interface SignatureVerifier<in Key>
-        satisfies UpdatingProcessor<SignatureVerifier<Key>>
-        given Key satisfies PublicKey
+"Verifies a cryptographic signature of a message."
+by("Dirk Lattermann")
+shared interface SignatureVerifier
+        satisfies UpdatingProcessor<SignatureVerifier>
 {
-    shared formal void init(Key key);
-    
+    "Checks if the given signature is valid for the input message.
+     
+     The last part of the message may be provided in the [[messagePart]] parameter. Previous parts may be provided
+     by calling [[update]] before calling this method.
+     
+     After the verification, the internal state is reset so this object can be reused immediately to verify
+     another signature."
     shared formal Boolean verify(Byte[] signature, {Byte*} messagePart = empty);
 }

@@ -1,9 +1,9 @@
-import de.dlkw.ccrypto.impl {
-    Sha256,
-    createSha256
-}
 import ceylon.test {
     test
+}
+
+import de.dlkw.ccrypto.impl {
+    Sha256
 }
 
 class Sha256Test()
@@ -116,7 +116,7 @@ class Sha256Test()
     shared void test2()
     {
         //    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-        value sha256 = createSha256();
+        value sha256 = Sha256();
         print(sha256.digest().collect((b)=>formatInteger(b.unsigned, 16)));
     }
 }

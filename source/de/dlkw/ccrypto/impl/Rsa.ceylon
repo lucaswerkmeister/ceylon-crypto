@@ -1,8 +1,8 @@
 import ceylon.whole {
     Whole,
-    zero,
-    formatWhole
+    zero
 }
+
 import de.dlkw.ccrypto.api {
     SignatureVerifier,
     RsaPublicKey,
@@ -42,7 +42,7 @@ class Rsa()
 }
 
 shared class RsaSsaPssSign(key, outerHash, mgf, saltGenerator, saltLength)
-        satisfies Signer<RsaPrivateKey>
+        satisfies Signer
 {
     variable RsaPrivateKey key;
     MessageDigester outerHash;
@@ -51,13 +51,7 @@ shared class RsaSsaPssSign(key, outerHash, mgf, saltGenerator, saltLength)
     Integer saltLength;
     
     value emsa = EmsaPssSign(outerHash, mgf, saltGenerator, saltLength, key.bitLength - 1);
-    
-    shared actual void init(RsaPrivateKey key)
-    {
-        this.key = key;
-        reset();
-    }
-    
+
     shared actual void reset()
     {
         outerHash.reset();
@@ -82,7 +76,7 @@ shared class RsaSsaPssSign(key, outerHash, mgf, saltGenerator, saltLength)
 }
 
 shared class RsaSsaPssVerify(key, outerHash, mgf, saltLength)
-        satisfies SignatureVerifier<RsaPublicKey>
+        satisfies SignatureVerifier
 {
     variable RsaPublicKey key;
     MessageDigester outerHash;
@@ -92,13 +86,7 @@ shared class RsaSsaPssVerify(key, outerHash, mgf, saltLength)
     value emLen = (key.bitLength - 2) / 8 + 1;
 
     value emsa = EmsaPssVerify(outerHash, mgf, saltLength, key.bitLength - 1);
-    
-    shared actual void init(RsaPublicKey key)
-    {
-        this.key = key;
-        reset();
-    }
-    
+
     shared actual void reset()
     {
         emsa.init();
@@ -123,31 +111,25 @@ shared class RsaSsaPssVerify(key, outerHash, mgf, saltLength)
 }
 
 shared RsaSsaPssSign sha1WithRsaAndMgf1Sha1Signer(RsaPrivateKey key, {Byte*} saltGenerator, Integer saltLength)
-        => RsaSsaPssSign(key, createSha1(), MGF1(createSha1()), saltGenerator, saltLength);
+        => RsaSsaPssSign(key, Sha1(), MGF1(Sha1()), saltGenerator, saltLength);
 
 shared RsaSsaPssVerify sha1WithRsaAndMgf1Sha1Verifier(RsaPublicKey key, Integer saltLength)
-        => RsaSsaPssVerify(key, createSha1(), MGF1(createSha1()), saltLength);
+        => RsaSsaPssVerify(key, Sha1(), MGF1(Sha1()), saltLength);
 
 shared RsaSsaPssSign sha256WithRsaAndMgf1Sha256Signer(RsaPrivateKey key, {Byte*} saltGenerator, Integer saltLength)
-        => RsaSsaPssSign(key, createSha256(), MGF1(createSha256()), saltGenerator, saltLength);
+        => RsaSsaPssSign(key, Sha256(), MGF1(Sha256()), saltGenerator, saltLength);
 
 shared RsaSsaPssVerify sha256WithRsaAndMgf1Sha256Verifier(RsaPublicKey key, Integer saltLength)
-        => RsaSsaPssVerify(key, createSha256(), MGF1(createSha256()), saltLength);
+        => RsaSsaPssVerify(key, Sha256(), MGF1(Sha256()), saltLength);
 
 shared class RsaSsaPkcs15Sign(key, digester)
-        satisfies Signer<RsaPrivateKey>
+        satisfies Signer
 {
     variable RsaPrivateKey key;
     MessageDigester digester;
     
     value emsa = EmsaPkcs1_v1_5(digester, key.octetLength);
 
-    shared actual void init(RsaPrivateKey key)
-    {
-        this.key = key;
-        reset();
-    }
-    
     shared actual void reset()
     {
         emsa.init(key.octetLength);
@@ -171,19 +153,13 @@ shared class RsaSsaPkcs15Sign(key, digester)
 }
 
 shared class RsaSsaPkcs15Verify(key, digester)
-        satisfies SignatureVerifier<RsaPublicKey>
+        satisfies SignatureVerifier
 {
     variable RsaPublicKey key;
     MessageDigester digester;
 
     value emsa = EmsaPkcs1_v1_5(digester, key.octetLength);
-    
-    shared actual void init(RsaPublicKey key)
-    {
-        this.key = key;
-        reset();
-    }
-    
+
     shared actual void reset()
     {
         emsa.init(key.octetLength);
@@ -210,13 +186,13 @@ shared class RsaSsaPkcs15Verify(key, digester)
 }
 
 shared RsaSsaPkcs15Sign sha1WithRsaSigner(RsaPrivateKey key)
-        => RsaSsaPkcs15Sign(key, createSha1());
+        => RsaSsaPkcs15Sign(key, Sha1());
 
 shared RsaSsaPkcs15Verify sha1WithRsaVerifier(RsaPublicKey key)
-        => RsaSsaPkcs15Verify(key, createSha1());
+        => RsaSsaPkcs15Verify(key, Sha1());
 
 shared RsaSsaPkcs15Sign sha256WithRsaSigner(RsaPrivateKey key)
-        => RsaSsaPkcs15Sign(key, createSha256());
+        => RsaSsaPkcs15Sign(key, Sha256());
 
 shared RsaSsaPkcs15Verify sha256WithRsaVerifier(RsaPublicKey key)
-        => RsaSsaPkcs15Verify(key, createSha256());
+        => RsaSsaPkcs15Verify(key, Sha256());

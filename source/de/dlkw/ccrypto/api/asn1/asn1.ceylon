@@ -1,19 +1,62 @@
 shared interface Asn1Value
 {
-    shared formal [Byte, Byte*] der;
+    shared formal [Byte+] der;
 }
 
 shared [Byte+] encodeLength(Integer length)
 {
+    assert (length >= 0);
     if (length < 128) {
         return [ length.byte ];
     }
     throw AssertionError("encoding of long form length not supported yet");
 }
 
+shared [Byte+] encodeTag(Integer tag, TagClass tagClass = TagClass.contextSpecific)
+{
+    assert (tag >= 0);
+
+    Byte classPattern;
+    switch (tagClass)
+    case (TagClass.contextSpecific) {
+        classPattern = $1000_0000.byte;
+    }
+    else {
+        throw AssertionError("tag class ``tagClass`` not supported yet");
+    }
+
+    if (tag <= 30) {
+        return [ classPattern.or(tag.byte)];
+    }
+    else {
+        throw AssertionError("tag > 30 not supported yet");
+    }
+}
+
+shared class TagClass of universal|application|contextSpecific|private
+{
+    shared new universal {}
+    shared new application {}
+    shared new contextSpecific {}
+    shared new private {}
+}
+
+shared class TaggedValue(asn1Value, tag, explicit, tagClass = TagClass.contextSpecific) satisfies Asn1Value
+{
+    shared Asn1Value asn1Value;
+    Integer tag;
+    Boolean explicit;
+    TagClass tagClass;
+    
+    if (!explicit) {
+        throw AssertionError("implicit tags not supported yet");
+    }
+    shared actual [Byte+] der = encodeTag(tag, tagClass).append(encodeLength(asn1Value.der.size));
+}
+
 shared class OctetString satisfies Asn1Value
 {
-    shared actual [Byte, Byte, Byte*] der;
+    shared actual [Byte, Byte+] der;
     
     shared new (Byte[] content)
     {

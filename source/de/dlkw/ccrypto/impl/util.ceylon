@@ -1,12 +1,24 @@
 import ceylon.whole {
     Whole,
     zero,
-    wholeNumber
-}
-import ceylon.collection {
-    HashMap
+    wholeNumber,
+    one
 }
 
+
+shared Integer calcBitLength(Whole number)
+{
+    if (number == zero) {
+        return 0;
+    }
+    variable Integer len = 0;
+    variable Whole n = one;
+    while (n <= number) {
+        len += 1;
+        n = n.leftLogicalShift(1);
+    }
+    return len;
+}
 
 shared Whole os2ip(Byte[] msg)
 {
@@ -29,5 +41,3 @@ shared Byte[] i2osp(msg, Integer emLen)
     }
     return output;
 }
-
-shared Whole rsaenc(Whole input, Whole exp, Whole mod) => input.moduloPower(exp, mod);

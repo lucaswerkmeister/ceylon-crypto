@@ -1,7 +1,5 @@
 import ceylon.whole {
-    Whole,
-    one,
-    zero
+    Whole
 }
 
 import de.dlkw.ccrypto.api {
@@ -15,20 +13,6 @@ shared abstract class AbstractRsaKey(modulus)
         satisfies RsaKey
 {
     shared actual Whole modulus;
-    
-    shared Integer calcBitLength(Whole number)
-    {
-        if (number == zero) {
-            return 0;
-        }
-        variable Integer len = 0;
-        variable Whole n = one;
-        while (n <= number) {
-            len += 1;
-            n = n.leftLogicalShift(1);
-        }
-        return len;
-    }
     shared actual Integer bitLength = calcBitLength(modulus);
 }
 

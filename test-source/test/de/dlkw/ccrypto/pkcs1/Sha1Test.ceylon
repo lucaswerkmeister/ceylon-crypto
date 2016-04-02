@@ -1,9 +1,9 @@
-import de.dlkw.ccrypto.impl {
-    Sha1,
-    createSha1
-}
 import ceylon.test {
     test
+}
+
+import de.dlkw.ccrypto.impl {
+    Sha1
 }
 
 class Sha1Test()
@@ -116,7 +116,7 @@ class Sha1Test()
     shared void test2_1()
     {
         //    da39a3ee5e6b4b0d3255bfef95601890afd80709
-        value sha1 = createSha1();
+        value sha1 = Sha1();
         print(sha1.digest().collect((b)=>formatInteger(b.unsigned, 16)));
     }    
 }

@@ -113,10 +113,10 @@ shared void cmpTest(parameters(`value keypairs`) JKeyPair jKeyPair,
         KeyPair<RsaCrtPrivateKey, RsaPublicKey> keyPair = j2cKeyPair(jKeyPair);
         
         privateKey = keyPair.privateKey;
-        Signer<RsaPrivateKey> signer = sha1WithRsaSigner(keyPair.privateKey);
+        Signer signer = sha1WithRsaSigner(keyPair.privateKey);
         Byte[] cSignature = signer.sign(message);
         
-        SignatureVerifier<RsaPublicKey> verifier = sha1WithRsaVerifier(keyPair.publicKey);
+        SignatureVerifier verifier = sha1WithRsaVerifier(keyPair.publicKey);
         assert (verifier.verify(cSignature, message));
         
         Signature jSigner = Signature.getInstance("sha1WithRSA");
@@ -162,7 +162,7 @@ shared void test01()
     value n = conv(nS);
     
     value privKey = RsaExponentPrivateKeyImpl(os2ip(d), os2ip(n));
-    Signer<RsaPrivateKey> rsaSig = RsaSsaPkcs15Sign(privKey, Sha1());
+    Signer rsaSig = RsaSsaPkcs15Sign(privKey, Sha1());
     value sig = rsaSig.update(message).sign();
     
     value jSig = Signature.getInstance("sha1WithRsa");
@@ -185,8 +185,8 @@ shared void test01()
     assert (exists jn);
     assert (exists je);
     value cKey = RsaExponentPrivateKeyImpl(jd, jn);
-    rsaSig.init(cKey);
-    value cs = rsaSig.sign(message);
+    Signer rsaSig1 = RsaSsaPkcs15Sign(cKey, Sha1());
+    value cs = rsaSig1.sign(message);
     assert (cs.sequence() == ss.sequence());
     
     value cPub = RsaPublicKeyImpl(je, jn);

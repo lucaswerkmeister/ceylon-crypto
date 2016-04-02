@@ -18,10 +18,10 @@ import de.dlkw.ccrypto.impl {
     RsaExponentPrivateKeyImpl
 }
 import de.dlkw.ccrypto.svcmgr {
-    createSha256WithRsaAndMgf1Sha256Verifier,
-    createSha256WithRsaAndMgf1Sha256Signer,
-    createSha256WithRsaSigner,
-    createSha256WithRsaVerifier
+    sha256WithRsaAndMgf1Sha256Signer,
+    sha256WithRsaAndMgf1Sha256Verifier,
+    sha256WithRsaSigner,
+    sha256WithRsaVerifier
 }
 
 "Illustrates the use of RSA signature according to PKCS #1 v2.2, signature scheme RSASSA-PSS,
@@ -36,10 +36,10 @@ shared void runSigRsaSsaPss() {
     value byteMsg = utf8.encode(msg);
 
     // we don't have a cryptographical random number generator yet, so use a shabby default ;-) random number generator
-    value signer = createSha256WithRsaAndMgf1Sha256Signer(privateKey, DefaultRandom().bytes());
+    value signer = sha256WithRsaAndMgf1Sha256Signer(privateKey, DefaultRandom().bytes());
     value signature = signer.sign(byteMsg);
     
-    value verifier = createSha256WithRsaAndMgf1Sha256Verifier(publicKey);
+    value verifier = sha256WithRsaAndMgf1Sha256Verifier(publicKey);
     assert (verifier.verify(signature, byteMsg));
 }
 
@@ -54,10 +54,10 @@ shared void runSigRsaSsaPkcs15() {
     value byteMsg = utf8.encode(msg);
     
     // you can use sha1 instead of sha256 below, if you must.
-    value signer = createSha256WithRsaSigner(privateKey);
+    value signer = sha256WithRsaSigner(privateKey);
     value signature = signer.sign(byteMsg);
     
-    value verifier = createSha256WithRsaVerifier(publicKey);
+    value verifier = sha256WithRsaVerifier(publicKey);
     assert (verifier.verify(signature, byteMsg));
 }
 
