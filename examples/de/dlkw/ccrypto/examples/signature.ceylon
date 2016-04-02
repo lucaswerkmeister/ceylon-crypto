@@ -17,7 +17,7 @@ import de.dlkw.ccrypto.impl {
     RsaPublicKeyImpl,
     RsaExponentPrivateKeyImpl
 }
-import de.dlkw.ccrypto.svcmgr {
+import de.dlkw.ccrypto.svc {
     sha256WithRsaAndMgf1Sha256Signer,
     sha256WithRsaAndMgf1Sha256Verifier,
     sha256WithRsaSigner,

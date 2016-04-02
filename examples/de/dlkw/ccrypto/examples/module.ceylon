@@ -1,5 +1,5 @@
 module de.dlkw.ccrypto.examples "0.0.2" {
-    import de.dlkw.ccrypto.svcmgr "0.0.2";
+    import de.dlkw.ccrypto.svc "0.0.2";
 
     // will not be needed once finished, temporary hack to initialize a key pair.
     import de.dlkw.ccrypto.impl "0.0.2";
