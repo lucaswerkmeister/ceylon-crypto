@@ -36,16 +36,14 @@ It runs using the JVM and the JavaScript runtime.
 ### Usage
 
 ```
-import de.dlkw.ccrypto {
-    createSha256
+import de.dlkw.ccrypto.svc {
+    sha256
 }
-    
-shared void run()
-{
-    value sha256 = createSha256();
-    sha256.update({#61.byte, #62.byte});
-    sha256.update({#63.byte});
-    Byte[] digest = sha256.finish();
+
+shared void run() {
+    value digester = sha256();
+    digester.update({#61.byte, #62.byte});
+    Byte[] digest = digester.digest({#63.byte});
 }
 ```
 
@@ -53,28 +51,28 @@ That is:
 
    1. Obtain an instance of the algorithm. For example,
           
-       `value sha256 = createSha256();`
+       `value digester = sha256();`
           
    2. Call the `update({Byte*})` method as often as you
        need, to transfer the whole message in arbitrarily
        sized parts to the algorithm.
        
-   3. Obtain the resulting value---message digest (hash),
-       signature value, whatever the algorithm is intended
-       for---by calling `digest({Byte*})`.
+   3. Obtain the resulting value---message digest (hash)---by calling `digest({Byte*})`.
       The argument to `digest()` is optional, defaulting
       to an empty message part.
        
    4. You can then reuse the algorithm object for another
-       message by continuing with `update` calls.
+       message by continuing with `update` and/or `digest` calls.
        
    To process a message with one call, don't use `update` and
    just call `digest(message)`.
    
    `reset()` clears the message from the algorithm so that
    the next `update` will start a new message. This is normally
-   not needed as a new instance will start initialized, and after calling
-   `finish()` the instance will also be initialized.
+   not needed as a new instance will start in a reset state, and after calling
+   `finish()` the instance will also be reset.
+   
+See `digest.ceylon` in the `de.dlkw.ccrypto.examples` package.
 
 ## SHA-1
 
@@ -84,7 +82,9 @@ Implemented from the [Wikipedia entry](https://en.wikipedia.org/wiki/SHA-1).
 
 like SHA-256, use 
 
-`value sha1 = createSha1();`
+`value digest = sha1();`
+
+See `digest.ceylon` in the `de.dlkw.ccrypto.examples` package.
 
 ## RSA
 
@@ -92,5 +92,6 @@ see `examples/de.dlkw.ccrypto.examples/signature.ceylon`
 
 The JavaScript implementation of class `Whole` seems to be incorrect. While the
 implemented PKCS #1 test vectors pass with the Java runtime, on JavaScript they fail,
-running very, very, veeery long. I didn't investigate further yet.
+running very, very, veeery long. I didn't investigate further yet. (Upcoming version 1.2.3 of `ceylon.Whole`
+has supposedly been fixed to give the correct value for JavaScript. I didn't check, either.)
 
