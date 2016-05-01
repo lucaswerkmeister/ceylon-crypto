@@ -12,13 +12,15 @@ import ceylon.whole {
 import de.dlkw.ccrypto.impl {
     RsaSsaPssSign,
     os2ip,
-    hexdump,
     RsaSsaPssVerify,
     RsaExponentPrivateKeyImpl,
     RsaCrtPrivateKeyImpl,
     RsaPublicKeyImpl,
     Sha1,
     MGF1
+}
+import de.dlkw.ccrypto.api.asn1old {
+    hexdump
 }
 
 {[Byte[], Byte[], Byte[]]*} messagesInt => {[

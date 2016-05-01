@@ -1,8 +1,8 @@
-import de.dlkw.ccrypto.api.asn1 {
+import de.dlkw.ccrypto.api.asn1old {
     ObjectIdentifier,
     asn1Null
 }
-import de.dlkw.ccrypto.api.asn1.pkcs {
+import de.dlkw.ccrypto.api.asn1old.pkcs {
     id_sha256,
     AlgorithmIdentifier
 }

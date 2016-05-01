@@ -31,7 +31,6 @@ import de.dlkw.ccrypto.impl {
     RsaExponentPrivateKeyImpl,
     RsaSsaPkcs15Sign,
     Sha1,
-    hexdump,
     RsaSsaPkcs15Verify,
     RsaPublicKeyImpl,
     RsaCrtPrivateKeyImpl,
@@ -51,6 +50,9 @@ import java.security.interfaces {
     JRSAPrivateCrtKey=RSAPrivateCrtKey,
     JRSAPublicKey=RSAPublicKey,
     JRSAPrivateKey = RSAPrivateKey
+}
+import de.dlkw.ccrypto.api.asn1old {
+    hexdump
 }
 
 Byte[] conv(String s) {

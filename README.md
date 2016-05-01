@@ -2,7 +2,7 @@
 
 Implementation of cryptographic algorithms/mechanisms in the Ceylon language.
 
-SHA-1, SHA-256 and RSA signature (RSASSA-PSS from PKCS #1) algorithms and schemes are implemented.
+SHA-1, SHA-256 and RSA signature (RSASSA-PSS and RSASSA-PKCS1-v1_5 from PKCS #1) algorithms and schemes are implemented.
 
 The implementation section still needs much cleanup.
 

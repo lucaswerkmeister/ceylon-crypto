@@ -185,8 +185,3 @@ class EmsaPssVerify(digester, mgf, sLen, emBits)
         return if (h == hPrime) then consistent else inconsistent;
     }
 }
-
-shared void hexdump({Byte*} b)
-{
-    print("``[ for (bb in b) formatInteger(bb.unsigned, 16)] ``");
-}
