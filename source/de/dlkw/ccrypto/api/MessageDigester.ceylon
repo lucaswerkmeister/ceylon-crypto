@@ -3,7 +3,7 @@ import de.dlkw.ccrypto.api.asn1 {
     asn1Null,
     ObjectIdentifier
 }
-import de.dlkw.ccrypto.api.asn1old.pkcs {
+import de.dlkw.ccrypto.api.asn1.pkcs {
     AlgorithmIdentifier
 }
 
@@ -56,5 +56,5 @@ shared interface MessageDigester
     "The ASN.1 algorithm identifier (from the PKCS #1 module) describing this `MessageDigester` object.
      
      Consists of the object identifier and the algorithm parameters."
-    shared formal AlgorithmIdentifier algorithmIdentifier;
+    shared formal AlgorithmIdentifier<Asn1Value<Anything>> algorithmIdentifier;
 }

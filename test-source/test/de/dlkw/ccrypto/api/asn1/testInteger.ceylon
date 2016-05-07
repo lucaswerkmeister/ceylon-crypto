@@ -10,11 +10,11 @@ import de.dlkw.ccrypto.api.asn1 {
 
 class IntegerTest()
 {
-    void perform(Byte[] buf, Integer val, Integer offset = 1)
+    void perform(Byte[] buf, Integer val, Integer offset = 0)
     {
-        value r = asn1IntegerDecoder.decodeGivenTag(buf, offset);
+        value r = asn1IntegerDecoder.decode(buf, offset);
         assert (!is DecodingError r);
-        assert (!r[2]);
+        assert (!r[0].violatesDer);
         assert (r[0].val == val);
         assert (asn1Integer(r[0].val).encoded == buf);
     }
@@ -65,7 +65,7 @@ class IntegerTest()
     shared void decodeInt0x()
     {
         value buf = [ #02.byte, #00.byte ];
-        value r = asn1IntegerDecoder.decodeGivenTag(buf, 1);
+        value r = asn1IntegerDecoder.decode(buf);
         assert (is DecodingError r);
         print(r.message);
     }
@@ -74,7 +74,7 @@ class IntegerTest()
     shared void decodeInt1v()
     {
         value buf = [ #02.byte, #02.byte, #00.byte, #01.byte ];
-        value r = asn1IntegerDecoder.decodeGivenTag(buf, 1);
+        value r = asn1IntegerDecoder.decode(buf);
         assert (is DecodingError r);
         print(r.message);
     }
@@ -97,7 +97,7 @@ class IntegerTest()
     shared void decodeIntm1x()
     {
         value buf = [ #02.byte, #02.byte, #ff.byte, #ff.byte ];
-        value r = asn1IntegerDecoder.decodeGivenTag(buf, 1);
+        value r = asn1IntegerDecoder.decode(buf);
         assert (is DecodingError r);
     }
 }

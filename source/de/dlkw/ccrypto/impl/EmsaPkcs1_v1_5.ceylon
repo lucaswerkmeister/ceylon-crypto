@@ -1,14 +1,16 @@
 import de.dlkw.ccrypto.api {
     MessageDigester
 }
-import de.dlkw.ccrypto.api.asn1old.pkcs {
-    AlgorithmIdentifier
-}
 import de.dlkw.ccrypto.api.asn1 {
     Asn1Sequence,
     OctetString,
     octetString,
-    asn1Sequence
+    asn1Sequence,
+    Option,
+    EncodingError
+}
+import de.dlkw.ccrypto.api.asn1.pkcs {
+    AlgorithmIdentifier
 }
 
 class IntendedEncodedMessageLengthTooShortException() extends Exception(){}
@@ -61,9 +63,10 @@ class EmsaPkcs1_v1_5(digester, emLen)
 
 Byte[] digestInfoEncodedDER(algorithmIdentifier, digest)
 {
-    AlgorithmIdentifier algorithmIdentifier;
+    AlgorithmIdentifier<Anything> algorithmIdentifier;
     Byte[] digest;
 
-    Asn1Sequence<[AlgorithmIdentifier, OctetString]> digestInfo = asn1Sequence<[AlgorithmIdentifier, OctetString]>(algorithmIdentifier, octetString(digest));
+    value digestInfo = asn1Sequence<[AlgorithmIdentifier<Anything>, OctetString]>([algorithmIdentifier, octetString(digest)], [Option.mandatory, Option.mandatory]);
+    assert (!is EncodingError digestInfo);
     return digestInfo.encoded;
 }

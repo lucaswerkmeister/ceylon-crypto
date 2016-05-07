@@ -25,7 +25,7 @@ test
 void decodeOID1()
 {
     value buf = [ #06.byte, #02.byte, #92.byte, #0f.byte ];
-    value r = objectIdentifierDecoder.decodeGivenTag(buf, 1);
+    value r = objectIdentifierDecoder.decode(buf);
     if (is DecodingError r) {
         print(r.message);
         assert(false);
@@ -42,7 +42,7 @@ void decodeOID2()
     value x = objectIdentifier([1, 2, 3, 400000000, 5]);
     print(x.asn1String);
     print(x.encoded);
-    value y = objectIdentifierDecoder.decodeGivenTag([99.byte, 99.byte, 99.byte, 99.byte, 6.byte, 8.byte, *x.encoded], 7, 6);
+    value y = objectIdentifierDecoder.decode([99.byte, 99.byte, 99.byte, 99.byte, 6.byte, 8.byte, *x.encoded], 6);
     if (is DecodingError y) {
         print(y.message);
         assert(false);

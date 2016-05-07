@@ -1,11 +1,11 @@
 shared class ObjectIdentifier extends Asn1Value<[Integer*]>
 {
-    shared new internal(Byte[] input, Boolean violatesDer, [Integer*] val)
-            extends super.direct(input, violatesDer, val)
+    shared new internal(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Integer[] valu)
+            extends Asn1Value<Integer[]>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, valu)
     {}
-    shared actual [Integer*] decode() => nothing;
-    
-    shared actual String asn1String => "OBJECT IDENTIFIER ``".".join(val.map((x) => x.string))``";
+
+    shared actual String asn1ValueString => "OBJECT IDENTIFIER ``".".join(val.map((x) => x.string))``";
+    shared actual Tag defaultTag => UniversalTag.objectIdentifier;
     
     shared ObjectIdentifier withTrailing(Integer last, Tag tag = UniversalTag.objectIdentifier)
     {
@@ -15,6 +15,10 @@ shared class ObjectIdentifier extends Asn1Value<[Integer*]>
 
 shared ObjectIdentifier objectIdentifier([Integer*] parts, Tag tag = UniversalTag.objectIdentifier)
 {
+    value identityInfo = IdentityInfo(tag, false);
+    value identityOctets = identityInfo.encoded;
+    value lengthOctetsOffset = identityOctets.size;
+
     assert (exists n0 = parts[0]);
     assert (exists n1 = parts[1]);
     
@@ -26,7 +30,7 @@ shared ObjectIdentifier objectIdentifier([Integer*] parts, Tag tag = UniversalTa
         assert (0 <= n1 < 256 - 2 * 40);
     }
     
-    variable [Byte, Byte*] content = [ (40 * n0 + n1).byte ];
+    variable [Byte, Byte*] encoded = [ (40 * n0 + n1).byte ];
     for (ni in parts[2...]) {
         assert (ni >= 0);
         variable value d = ni / 128;
@@ -36,9 +40,11 @@ shared ObjectIdentifier objectIdentifier([Integer*] parts, Tag tag = UniversalTa
             cc = cc.withLeading(rem);
             d = d / 128;
         }
-        content = content.append(cc);
+        encoded = encoded.append(cc);
     }
-    return ObjectIdentifier.internal(IdentityInfo(tag, false).encoded.append(encodeLength(content.size)).append(content), false, parts);
+    
+    value encodedLength = encodeLength(encoded.size);
+    return ObjectIdentifier.internal(identityOctets.chain(encodedLength).chain(encoded).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, parts);
 }
 
 shared object objectIdentifierDecoder
@@ -51,7 +57,7 @@ shared object objectIdentifierDecoder
             if (b.get(7)) {
                 value low = b.and($0111_1111.byte);
                 if (low == 0.byte) {
-                    return DecodingError("not minimum number of octets");
+                    return DecodingError(contentStart - 1, "not minimum number of octets");
                 }
                 result = result * 128 + low.unsigned;
             }
@@ -60,30 +66,22 @@ shared object objectIdentifierDecoder
                 return [result, contentStart];
             }
         }
-        return DecodingError("reached end of content octets while decoding OID component (content shorter that indicated by length octets)");
+        return DecodingError(contentStart, "reached end of content octets while decoding OID component (content shorter that indicated by length octets)");
     }
 
-    shared actual [ObjectIdentifier, Integer, Boolean]|DecodingError decodeGivenTag(Byte[] input, Integer offset, Integer identityOctetsOffset)
+    shared actual [ObjectIdentifier, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
-        variable Boolean violateDer = false;
-        value r = decodeLengthOctets(input, offset);
-        if (is DecodingError r) {
-            return r;
-        }
-        value [length, contentStart, violate0] = r;
-        violateDer ||= violate0;
-
-        value b0 = input[contentStart]?.unsigned;
+        value b0 = input[offset]?.unsigned;
         if (!exists b0) {
-            return DecodingError("unexpected end of input");
+            return DecodingError(offset, "unexpected end of input");
         }
 
         value res0 = if (b0 < 40) then 0 else if (b0 < 80) then 1 else 2;
         value res1 = b0 - res0 * 40;
         variable [Integer, Integer+] result = [res0, res1];
 
-        variable value nextPos = contentStart + 1;
-        while (nextPos < contentStart + length) {
+        variable value nextPos = offset + 1;
+        while (nextPos < offset + length) {
             value r0 = decodeOidComponent(input, nextPos);
             if (is DecodingError r0) {
                 return r0;
@@ -93,10 +91,11 @@ shared object objectIdentifierDecoder
 
             result = result.withTrailing(component);
         }
-        if (nextPos != contentStart + length) {
-            return DecodingError("OID content longer than indicated by length octets (last byte has bit 7 set)");
+        if (nextPos != offset + length) {
+            return DecodingError(nextPos, "OID content longer than indicated by length octets (last byte has bit 7 set)");
         }
-        value oid = ObjectIdentifier.internal(input[identityOctetsOffset:length + contentStart - identityOctetsOffset], violateDer, result);
-        return [oid, nextPos, violateDer];
+
+        value oid = ObjectIdentifier.internal(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer, result);
+        return [oid, nextPos];
     }
 }

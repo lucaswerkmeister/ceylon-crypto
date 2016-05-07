@@ -16,15 +16,15 @@ import de.dlkw.ccrypto.api.asn1 {
 
 shared class OctetStringTest()
 {
-    void perform(Byte[] buf, Byte[] val, Integer offset = 1)
+    void perform(Byte[] buf, Byte[] val, Integer offset = 0)
     {
-        value r = octetStringDecoder.decodeGivenTag(buf, offset);
+        value r = octetStringDecoder.decode(buf, offset);
         if (is DecodingError r) {
             print(r.message);
             fail("error");
         }
         else {
-            assert (!r[2]);
+            assert (!r[0].violatesDer);
             print(r[0].asn1String);
             assert (r[0].val == val);
             assert (octetString(r[0].val).encoded == buf);

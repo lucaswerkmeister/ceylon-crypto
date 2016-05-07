@@ -1,31 +1,3 @@
-shared abstract class Asn1Value<out Value>
-{
-    shared Byte[] encoded;
-    shared Boolean violatesDer;
-    
-    Value? storedValue;
-    
-    shared new direct(Byte[] encoded, Boolean violatesDer, Value? val = null)
-    {
-        this.encoded = encoded;
-        this.violatesDer = violatesDer;
-        
-        this.storedValue = val;
-    }
-    
-    shared new decoding(Byte[] encoded, Boolean violatesDer)
-    {
-        this.encoded = encoded;
-        this.violatesDer = violatesDer;
-        
-        this.storedValue = null;
-    }
-
-    shared formal Value decode();
-    shared Value val => storedValue else decode();
-    shared formal String asn1String;
-}
-
 shared class TagClass of universal | application | contextSpecific | private
 {
     shared Byte highBits;
@@ -67,6 +39,22 @@ shared class Tag(tagNumber, tagClass = TagClass.contextSpecific)
     
     shared actual String string => tagClass.string + " " + tagNumber.string;
     shared String asn1String => "[``if (tagClass == TagClass.contextSpecific) then tagNumber else " ".join({ tagClass, tagNumber })``]";
+    
+    shared actual Boolean equals(Object other)
+    {
+        if (!is Tag other) {
+            return false;
+        }
+        return tagClass == other.tagClass && tagNumber == other.tagNumber;
+    }
+    
+    shared actual Integer hash
+    {
+        variable Integer hash = 27;
+        hash = (13 * hash) + tagClass.hash;
+        hash = (13 * hash) + tagNumber.hash;
+        return hash;
+    }
 }
 
 shared class UniversalTag extends Tag
@@ -116,7 +104,7 @@ shared class IdentityInfo(tag, constructed)
     }
 }
 
-shared class DecodingError(shared String? message = null)
+shared class DecodingError(shared Integer offset, shared String? message = null)
 {}
 
 shared class EncodingError(shared String? message = null)
@@ -158,10 +146,10 @@ shared [IdentityInfo, Integer, Boolean] | DecodingError decodeIdentityOctets(Byt
             assert (exists b = input[i]);
             Integer tagN = b.and($0111_1111.byte).unsigned;
             if (tmpTagNo == 0 && tagN == 0) {
-                return DecodingError("not as few digits as possible in high-tag-number form");
+                return DecodingError(i, "not as few digits as possible in high-tag-number form");
             }
             if (tmpTagNo.and(#fe000000) != 0) {
-                return DecodingError("unsupported tag number > 32bit");
+                return DecodingError(i, "unsupported tag number > 32bit");
             }
             tmpTagNo = tmpTagNo.leftLogicalShift(7) + tagN;
             goOn = b.get(7);
@@ -198,7 +186,7 @@ shared [Integer, Integer, Boolean] | DecodingError decodeLengthOctets(Byte[] inp
         Integer length1 = length0.and($0111_1111.byte).unsigned;
         if (length1 == 0) {
             violatesDer = true;
-            return DecodingError("decoding method ``EncodingMethod.constructedIndefiniteLength`` not supported");
+            return DecodingError(offset, "decoding method ``EncodingMethod.constructedIndefiniteLength`` not supported");
         }
         else {
             variable Integer length = 0;
@@ -209,7 +197,7 @@ shared [Integer, Integer, Boolean] | DecodingError decodeLengthOctets(Byte[] inp
                 }
                 value lengthN = b.unsigned;
                 if (length.and(#ff000000) != 0) {
-                    return DecodingError("unsupported length > 32bit");
+                    return DecodingError(i, "unsupported length > 32bit");
                 }
                 length = length.leftLogicalShift(8) + lengthN;
             }
@@ -239,9 +227,48 @@ shared [Byte+] encodeLength(variable Integer length)
 }
 
 shared abstract class Decoder<out Asn1Type>()
-        given Asn1Type satisfies Asn1Value<Anything>
+        given Asn1Type satisfies GenericAsn1Value
 {
-    shared formal [Asn1Type, Integer, Boolean] | DecodingError decodeGivenTag("The input to decode. Must be encoded according to the BER." Byte[] input,
+    shared [Asn1Type, Integer] | DecodingError decode("The input to decode. Must be encoded according to the BER." Byte[] input,
+        "The offset in [[input]] of the start of this ASN.1 value---the first (or only) identity octet." Integer offset = 0)
+    {
+        variable Boolean violatesDer = false;
+        
+        value res0 = decodeIdentityOctets(input, offset);
+        if (is DecodingError res0) {
+            return res0;
+        }
+        value [identityOctets, lengthAndContentStart, violates0] = res0;
+        violatesDer ||= violates0;
+        
+        value res1 = decodeGivenTag(input, lengthAndContentStart, identityOctets, offset, violatesDer);
+        if (is DecodingError res1) {
+            return res1;
+        }
+        return res1;
+    }
+
+    shared [Asn1Type, Integer] | DecodingError decodeGivenTag(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer identityOctetsOffset, variable Boolean violatesDer)
+    {
+        value r = decodeLengthOctets(input, offset);
+        if (is DecodingError r) {
+            return r;
+        }
+        value [length, contentStart, violate0] = r;
+        violatesDer ||= violate0;
+        
+        return decodeGivenTagAndLength(input, contentStart, identityInfo, length, identityOctetsOffset, offset, violatesDer);
+    }
+    
+    shared formal [Asn1Type, Integer] | DecodingError decodeGivenTagAndLength("The input to decode. Must be encoded according to the BER." Byte[] input,
         "The offset in [[input]] of the first (or only) length octet." Integer offset,
-        "The offset in [[input]] of the start of this ASN.1 value. Must lie before [[offset]]." Integer identityOctetsOffset = 0);
+        IdentityInfo identityInfo,
+        Integer length,
+        "The offset in [[input]] of the start of this ASN.1 value. Must lie before [[offset]]." Integer identityOctetsOffset,
+        Integer lengthOctetsOffset,
+        Boolean violatesDer);
 }
+
+shared String hexdigits(Byte b) => formatInteger(b.unsigned, 16).padLeading(2, '0');
+shared String hexdump({Byte*} bytes) => " ".join(bytes.map((b) => hexdigits(b)));
+

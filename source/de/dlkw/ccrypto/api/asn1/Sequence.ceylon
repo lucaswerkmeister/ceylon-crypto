@@ -4,20 +4,24 @@ import ceylon.language.meta {
 
 "DEFAULT not supported"
 shared class Asn1Sequence<out Types> extends Asn1Value<Types>
-        given Types satisfies [Asn1Value<Anything>?+]
+        given Types satisfies [GenericAsn1Value?+]
 {
-    shared sealed new internal(Byte[] encoded, Boolean violatesDer, Types elements)
-            extends super.direct(encoded, violatesDer, elements)
+    shared sealed new internal(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Types elements)
+            extends Asn1Value<Types>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, elements)
     {}
     
-    shared actual String asn1String => "SEQUENCE { ``" ".join(val.map((x)=>x?.asn1String else "(absent)"))`` }";
+    shared actual String asn1ValueString => "SEQUENCE { ``" ".join(val.map((x)=>x?.asn1String else "(absent)"))`` }";
+    shared actual Tag defaultTag => UniversalTag.sequence;
     shared Types elements => val;
-    shared actual Types decode() => nothing;
 }
 
 // FIXME real ugly. Need to ascertain elements and defaults sequence elements are of same Asn1Value
-shared Byte[] | EncodingError encodeAsn1Sequence([Asn1Value<Anything>?+] elements, [Asn1Value<Anything> | Option +] defaults)
+shared [Byte[], IdentityInfo, Integer, Integer] | EncodingError encodeAsn1Sequence([Asn1Value<Anything>?+] elements, [Asn1Value<Anything> | Option +] defaults, Tag tag)
 {
+    value identityInfo = IdentityInfo(tag, true);
+    value identityOctets = identityInfo.encoded;
+    value lengthOctetsOffset = identityOctets.size;
+
     variable {Byte*} contentOctets = [];
     variable Integer length = 0;
 
@@ -44,19 +48,20 @@ shared Byte[] | EncodingError encodeAsn1Sequence([Asn1Value<Anything>?+] element
         }
     }
     
-    value encoded = { #30.byte }.chain(encodeLength(length)).chain(contentOctets);
-    return encoded.sequence();
+    value encodedLength = encodeLength(contentOctets.size);
+    return [identityOctets.chain(encodedLength).chain(contentOctets).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size];
 }
 
-shared Asn1Sequence<Types> | EncodingError asn1Sequence<Types>(Types elements, [Asn1Value<Anything> | Option +] defaults)
+shared Asn1Sequence<Types> | EncodingError asn1Sequence<Types>(Types elements, [Asn1Value<Anything> | Option +] defaults, Tag tag = UniversalTag.sequence)
         given Types satisfies [Asn1Value<Anything>?+]
 {
-    value encoded = encodeAsn1Sequence(elements, defaults);
-    if (is EncodingError encoded) {
-        return encoded;
+    value res = encodeAsn1Sequence(elements, defaults, tag);
+    if (is EncodingError res) {
+        return res;
     }
+    value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = res;
     
-    return Asn1Sequence<Types>.internal(encoded.sequence(), false, elements);
+    return Asn1Sequence<Types>.internal(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, elements);
 }
 
 shared class Option of optional | mandatory
@@ -66,34 +71,77 @@ shared class Option of optional | mandatory
 }
 
 shared class Descriptor<out Element>(tag, decoder, default = Option.mandatory)
-given Element satisfies Asn1Value<Anything>
+given Element satisfies GenericAsn1Value
 {
     shared Tag tag;
 
-    shared Decoder<Element> decoder;
+    shared Decoder<Element>(GenericAsn1Value?[]) decoder;
     shared Element|Option default;
+}
+
+shared class GenericSequenceDecoder()
+        extends Decoder<Asn1Sequence<Anything>>()
+{
+    shared actual [Asn1Sequence<Anything>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer contentStart, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
+    {
+        variable Asn1Value<Anything>[] tmpResult = [];
+        
+        variable Integer startPos = contentStart;
+        while (startPos < contentStart + length) {
+            value res0 = decodeIdentityOctets(input, startPos);
+            if (is DecodingError res0) {
+                return res0;
+            }
+            value [l0, lengthAndContentStart, violates0] = res0;
+            violatesDer ||= violates0;
+            
+            if (l0.tag.tagClass == TagClass.universal) {
+                Decoder<Asn1Value<Anything>> decoder;
+                if (l0.tag.tagNumber == UniversalTag.integer.tagNumber) {
+                    decoder = asn1IntegerDecoder;
+                }
+                else if (l0.tag.tagNumber == UniversalTag.octetString.tagNumber) {
+                    decoder = octetStringDecoder;
+                }
+                else {
+                    return DecodingError(startPos, "unsupported tag ``l0.tag``");
+                }
+                value decoded = decoder.decodeGivenTag(input, lengthAndContentStart, l0, startPos, violatesDer);
+                if (is DecodingError decoded) {
+                    return decoded;
+                }
+                value decodedElement = decoded[0];
+                violatesDer ||= decodedElement.violatesDer;
+                
+                tmpResult = tmpResult.withTrailing(decodedElement);
+                startPos = decoded[1];
+            }
+            else {
+                return DecodingError(startPos, "cannot decode sequence with tagging when no descriptors are given");
+            }
+        }
+        if (startPos != contentStart + length) {
+            return DecodingError(startPos, "SEQUENCE content is longer than described by SEQUENCE's length octet(s)");
+        }
+        
+        "FIXME: support empty sequences"
+        assert (is [Asn1Value<Anything>+] result = tmpResult); // FIXME
+        value seq = Asn1Sequence<[Asn1Value<Anything>+]>.internal(input[identityOctetsOffset .. startPos - 1], identityInfo, lengthOctetsOffset, contentStart, violatesDer, result);
+        return [seq, startPos];
+    }
 }
 
 shared class SequenceDecoder<Types>(els)
         extends Decoder<Asn1Sequence<Types>>()
-        given Types satisfies [Asn1Value<Anything>?, Asn1Value<Anything>?*]
+        given Types satisfies [GenericAsn1Value?+]
 {
-    Descriptor<Asn1Value<Anything>>[] els;
+    Descriptor<GenericAsn1Value>[] els;
     
-    shared default actual [Asn1Sequence<Types>, Integer, Boolean] | DecodingError decodeGivenTag(Byte[] input, Integer offset, Integer identityOctetsOffset)
+    shared default actual [Asn1Sequence<Types>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer contentStart, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
-        variable Boolean violatesDer = false;
-        
-        value res = decodeLengthOctets(input, offset);
-        if (is DecodingError res) {
-            return res;
-        }
-        value [length, contentStart, violates] = res;
-        violatesDer ||= violates;
-
         value defIter = els.iterator();
         
-        variable Asn1Value<Anything>?[] tmpResult = [];
+        variable GenericAsn1Value?[] tmpResult = [];
         
         variable Integer startPos = contentStart;
         while (startPos < contentStart + length) {
@@ -107,13 +155,13 @@ shared class SequenceDecoder<Types>(els)
             variable Boolean found = false;
             while (!is Finished el = defIter.next()) {
                 if (l0.tag.tagClass == el.tag.tagClass && l0.tag.tagNumber == el.tag.tagNumber) {
-                    value decoded = el.decoder.decodeGivenTag(input, lengthAndContentStart, startPos);
+                    value decoded = el.decoder(tmpResult).decodeGivenTag(input, lengthAndContentStart, l0, startPos, violatesDer);
                     if (is DecodingError decoded) {
                         return decoded;
                     }
-                    violatesDer ||= decoded[2];
-                    
                     value decodedElement = decoded[0];
+                    violatesDer ||= decodedElement.violatesDer;
+                    
                     tmpResult = tmpResult.withTrailing(decodedElement);
                     
                     if (!is Option default = el.default) {
@@ -131,7 +179,7 @@ shared class SequenceDecoder<Types>(els)
                     if (is Option default) {
                         switch (default)
                         case (Option.mandatory) {
-                            return DecodingError("unexpected tag ``l0.tag`` in sequence, expected ``el.tag``");
+                            return DecodingError(startPos, "unexpected tag ``l0.tag`` in sequence, expected ``el.tag``");
                         }
                         case (Option.optional) {
                             tmpResult = tmpResult.withTrailing(null);
@@ -143,18 +191,18 @@ shared class SequenceDecoder<Types>(els)
                 }
             }
             if (!found) {
-                return DecodingError("spurious content of SEQUENCE after last element");
+                return DecodingError(startPos, "spurious content of SEQUENCE after last element");
             }
         }
         if (startPos != contentStart + length) {
-            return DecodingError("SEQUENCE content is longer than described by SEQUENCE's length octet(s)");
+            return DecodingError(startPos, "SEQUENCE content is longer than described by SEQUENCE's length octet(s)");
         }
         while (!is Finished el = defIter.next()) {
             value default = el.default;
             if (is Option default) {
                 switch (default)
                 case (Option.mandatory) {
-                    return DecodingError("missing non-optional element with tag ``el.tag`` at end of SEQUENCE");
+                    return DecodingError(startPos, "missing non-optional element with tag ``el.tag`` at end of SEQUENCE");
                 }
                 case (Option.optional) {
                     tmpResult = tmpResult.withTrailing(null);
@@ -172,6 +220,7 @@ shared class SequenceDecoder<Types>(els)
             print(`Types`);
             throw AssertionError("Type mismatch error while sequence decoding. Check type parameters of Asn1Sequence and type parameters of the employed Decoders. Note: OPTIONAL values correspond to intersection types with ceylon.language::Null.");
         }
-        return [Asn1Sequence<Types>.internal(input[identityOctetsOffset..contentStart + length - 1], violatesDer, result), contentStart + length, violatesDer];
+        value int = Asn1Sequence.internal(input[identityOctetsOffset .. startPos - 1], identityInfo, lengthOctetsOffset, contentStart, violatesDer, result);
+        return [int, startPos];
     }
 }

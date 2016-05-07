@@ -18,9 +18,7 @@ import de.dlkw.ccrypto.api.asn1 {
     asn1IntegerDecoder,
     TagClass,
     DecodingError,
-    UniversalTag
-}
-import de.dlkw.ccrypto.api.asn1old {
+    UniversalTag,
     hexdump
 }
 
@@ -139,15 +137,15 @@ test
 void decodeSeq1()
 {
     value buf = [ #30.byte, #08.byte, #02.byte, #01.byte, #18.byte, #02.byte, #03.byte, #01.byte, #00.byte, #01.byte ];
-    value dec = SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(Tag(2, TagClass.universal), asn1IntegerDecoder), Descriptor<Asn1Integer>(Tag(2, TagClass.universal), asn1IntegerDecoder)]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value dec = SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(Tag(2, TagClass.universal), (_)=>asn1IntegerDecoder), Descriptor<Asn1Integer>(Tag(2, TagClass.universal), (_)=>asn1IntegerDecoder)]);
+    value r = dec.decode(buf);
     if (is DecodingError r) {
         print(r.message);
         fail();
         return;
     }
     assert (r[1] == 10);
-    assert (!r[2]);
+    assert (!r[0].violatesDer);
     print(r[0].asn1String);
     print(r[0].val[0].val);
     print(r[0].val[1].val);
@@ -157,15 +155,15 @@ test
 void decodeSeq1b()
 {
     value buf = [ #30.byte, #09.byte, #02.byte, #81.byte, 1.byte, #18.byte, #02.byte, #03.byte, #01.byte, #00.byte, #01.byte ];
-    value dec = SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder), Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder)]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value dec = SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder), Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder)]);
+    value r = dec.decode(buf);
     if (is DecodingError r) {
         print(r.message);
         fail();
         return;
     }
     assert (r[1] == 11);
-    assert (r[2]);
+    assert (r[0].violatesDer);
     print(r[0].asn1String);
     print(r[0].val[0].val);
     print(r[0].val[1].val);
@@ -175,8 +173,8 @@ test
 void decodeSeq2()
 {
     value buf = [ #30.byte, #03.byte, #02.byte, #01.byte, #18.byte, #02.byte, #03.byte, #01.byte, #00.byte, #01.byte ];
-    value dec = SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder), Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder)]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value dec = SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder), Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder)]);
+    value r = dec.decode(buf);
     assert (is DecodingError r);
     print(r.message);
 }
@@ -185,8 +183,8 @@ test
 void decodeSeq3()
 {
     value buf = [ #30.byte, #04.byte, #02.byte, #01.byte, #18.byte, #02.byte, #03.byte, #01.byte, #00.byte, #01.byte ];
-    value dec = SequenceDecoder<[Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder)]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value dec = SequenceDecoder<[Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder)]);
+    value r = dec.decode(buf);
 //    value r = decodeSequence([GenericElementDescription(TagClass2.universal, 2, TagMode.primitive, false, null, decodeAsn1Integer2GivenTag)])(buf, 0);
     assert (is DecodingError r);
     print(r.message);
@@ -196,8 +194,8 @@ test
 void decodeSeq4()
 {
     value buf = [ #30.byte, #02.byte, #02.byte, #01.byte, #18.byte, #02.byte, #03.byte, #01.byte, #00.byte, #01.byte ];
-    value dec = SequenceDecoder<[Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder)]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value dec = SequenceDecoder<[Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder)]);
+    value r = dec.decode(buf);
 //    value r = decodeSequence([GenericElementDescription(TagClass2.universal, 2, TagMode.primitive, false, null, decodeAsn1Integer2GivenTag)])(buf, 0);
     assert (is DecodingError r);
     print(r.message);
@@ -207,8 +205,8 @@ test
 void decodeSeq5()
 {
     value buf = [ #30.byte, #08.byte, #02.byte, #01.byte, #18.byte, #02.byte, #03.byte, #01.byte, #00.byte, #01.byte ];
-    value dec = SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder), Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder)]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value dec = SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder), Descriptor<Asn1Integer>(UniversalTag.integer,(_)=> asn1IntegerDecoder)]);
+    value r = dec.decode(buf);
 //    value r = decodeSequence<[Asn1Integer2, Asn1Integer2]>([GenericElementDescription(TagClass2.universal, 2, TagMode.primitive, false, null, decodeAsn1Integer2GivenTag), GenericElementDescription(TagClass2.universal, 2, TagMode.primitive, false, null, decodeAsn1Integer2GivenTag)])(buf, 0);
     if (is DecodingError r) {
         print(r.message);
@@ -224,8 +222,8 @@ void decodeSeqOpt1()
 {
     // implicit tags, first optional element absent
     value buf = [ #30.byte, #03.byte, #81.byte, #01.byte, #18.byte, #82.byte, #03.byte, #01.byte, #00.byte, #01.byte ];
-    value dec = SequenceDecoder<[Asn1Integer?, Asn1Integer?]>([Descriptor<Asn1Integer>(Tag(0), asn1IntegerDecoder, Option.optional), Descriptor<Asn1Integer>(Tag(1), asn1IntegerDecoder, Option.optional)]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value dec = SequenceDecoder<[Asn1Integer?, Asn1Integer?]>([Descriptor<Asn1Integer>(Tag(0), (_)=>asn1IntegerDecoder, Option.optional), Descriptor<Asn1Integer>(Tag(1), (_)=>asn1IntegerDecoder, Option.optional)]);
+    value r = dec.decode(buf);
 //    value r = decodeSequence<[Asn1Integer2?, Asn1Integer2]>([GenericElementDescription(TagClass2.contextSpecific, 0, TagMode.primitive, true, null, decodeAsn1Integer2GivenTag), GenericElementDescription(TagClass2.contextSpecific, 1, TagMode.primitive, false, null, decodeAsn1Integer2GivenTag)])(buf, 0);
     if (is DecodingError r) {
         print(r.message);
@@ -240,8 +238,8 @@ test
 void decodeSeqOpt2()
 {
     value buf = [ #30.byte, #03.byte, #80.byte, #01.byte, #18.byte, #82.byte, #03.byte, #01.byte, #00.byte, #01.byte ];
-    value dec = SequenceDecoder<[Asn1Integer?, Asn1Integer?]>([Descriptor<Asn1Integer>(Tag(0), asn1IntegerDecoder, Option.optional), Descriptor<Asn1Integer>(Tag(1), asn1IntegerDecoder, Option.optional)]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value dec = SequenceDecoder<[Asn1Integer?, Asn1Integer?]>([Descriptor<Asn1Integer>(Tag(0), (_)=>asn1IntegerDecoder, Option.optional), Descriptor<Asn1Integer>(Tag(1), (_)=>asn1IntegerDecoder, Option.optional)]);
+    value r = dec.decode(buf);
 //    value r = decodeSequence<[Asn1Integer2, Asn1Integer2?]>([GenericElementDescription(TagClass2.contextSpecific, 0, TagMode.primitive, false, null, decodeAsn1Integer2GivenTag), GenericElementDescription(TagClass2.contextSpecific, 1, TagMode.primitive, true, null, decodeAsn1Integer2GivenTag)])(buf, 0);
     if (is DecodingError r) {
         print(r.message);
@@ -256,8 +254,8 @@ test
 void decodeSeq_0()
 {
     value buf = [ #30.byte, #08.byte, #80.byte, #01.byte, #18.byte, #81.byte, #03.byte, #01.byte, #00.byte, #01.byte ];
-    value dec = SequenceDecoder<[Asn1Integer?, Asn1Integer?]>([Descriptor<Asn1Integer>(Tag(0), asn1IntegerDecoder, Option.optional), Descriptor<Asn1Integer>(Tag(1), asn1IntegerDecoder, Option.optional)]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value dec = SequenceDecoder<[Asn1Integer?, Asn1Integer?]>([Descriptor<Asn1Integer>(Tag(0), (_)=>asn1IntegerDecoder, Option.optional), Descriptor<Asn1Integer>(Tag(1), (_)=>asn1IntegerDecoder, Option.optional)]);
+    value r = dec.decode(buf);
 //    value r = decodeSequence<[Asn1Integer2, Asn1Integer2]>([GenericElementDescription(TagClass2.contextSpecific, 0, TagMode.primitive, false, null, decodeAsn1Integer2GivenTag), GenericElementDescription(TagClass2.contextSpecific, 1, TagMode.primitive, false, null, decodeAsn1Integer2GivenTag)])(buf, 0);
     if (is DecodingError r) {
         print(r.message);
@@ -273,10 +271,10 @@ void decodeSeqSeq()
 {
     value buf = [ #30.byte, #0d.byte, #30.byte, #06.byte, #02.byte, #01.byte, #ff.byte, #02.byte, #01.byte, #01.byte, #30.byte, #03.byte, #02.byte, #01.byte, #02.byte ];
     value dec = SequenceDecoder<[Asn1Sequence<[Asn1Integer, Asn1Integer]>, Asn1Sequence<[Asn1Integer]>]>([
-        Descriptor<Asn1Sequence<[Asn1Integer, Asn1Integer]>>(UniversalTag.sequence, SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder), Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder)])),
-        Descriptor<Asn1Sequence<[Asn1Integer]>>(UniversalTag.sequence, SequenceDecoder<[Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, asn1IntegerDecoder)]))
+        Descriptor<Asn1Sequence<[Asn1Integer, Asn1Integer]>>(UniversalTag.sequence, (_)=>SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder), Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder)])),
+        Descriptor<Asn1Sequence<[Asn1Integer]>>(UniversalTag.sequence, (_)=>SequenceDecoder<[Asn1Integer]>([Descriptor<Asn1Integer>(UniversalTag.integer, (_)=>asn1IntegerDecoder)]))
     ]);
-    value r = dec.decodeGivenTag(buf, 1);
+    value r = dec.decode(buf);
 /*
     value r = decodeSequence<[Sequence2<[Asn1Integer2, Asn1Integer2]>, Sequence2<[Asn1Integer2]>]>([
         GenericElementDescription(TagClass2.universal, 16, TagMode.constructed, false, null, decodeSequenceGivenTag<

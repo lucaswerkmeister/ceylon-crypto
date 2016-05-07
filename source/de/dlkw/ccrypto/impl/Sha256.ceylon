@@ -1,12 +1,13 @@
-import de.dlkw.ccrypto.api.asn1old {
+import de.dlkw.ccrypto.api.asn1 {
     ObjectIdentifier,
+    Asn1Null,
     asn1Null
 }
-import de.dlkw.ccrypto.api.asn1old.pkcs {
-    id_sha256,
-    AlgorithmIdentifier
+import de.dlkw.ccrypto.api.asn1.pkcs {
+    AlgorithmIdentifier,
+    mkAlgId = algorithmIdentifier,
+    id_sha256
 }
-
 
 """
    Implementation of the SHA-256 message digest (hash) algorithm
@@ -20,7 +21,7 @@ shared class Sha256()
         extends AbstractDigest(64, 256)
 {
     shared actual ObjectIdentifier objectIdentifier => id_sha256;
-    shared actual AlgorithmIdentifier algorithmIdentifier = AlgorithmIdentifier(objectIdentifier, asn1Null);
+    shared actual AlgorithmIdentifier<Asn1Null> algorithmIdentifier = mkAlgId(objectIdentifier, asn1Null());
     
     value hInit = Array({ #6a09e667, #bb67ae85, #3c6ef372, #a54ff53a, #510e527f, #9b05688c, #1f83d9ab, #5be0cd19 });
 

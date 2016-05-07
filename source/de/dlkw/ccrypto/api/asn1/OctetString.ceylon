@@ -1,40 +1,30 @@
-import de.dlkw.ccrypto.api.asn1old {
-    hexdump
-}
 shared class OctetString extends Asn1Value<Byte[]>
 {
-    Integer startContentOffset;
-    shared new (Byte[] encoded, Boolean violatesDer, Integer startContentOffset)
-            extends Asn1Value<Byte[]>.direct(encoded, violatesDer)
-    {
-        this.startContentOffset = startContentOffset;
-    }
+    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer)
+            extends Asn1Value<Byte[]>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer)
+    {}
 
-    shared actual Byte[] decode() => encoded[startContentOffset...];
-    shared actual String asn1String => "OCTET STRING ``hexdump(val)``";
+    shared actual Byte[] decode() => encoded[contentOctetsOffset...];
+    shared actual String asn1ValueString => "OCTET STRING ``hexdump(val)``";
+    shared actual Tag defaultTag => UniversalTag.octetString;
 }
 
 shared OctetString octetString(variable Byte[] val, Tag tag = UniversalTag.octetString)
 {
-    value identityOctets = IdentityInfo(tag, false).encoded;
-    value lengthOctets = encodeLength(val.size);
-    return OctetString(identityOctets.chain(lengthOctets).chain(val).sequence(), false, identityOctets.size + lengthOctets.size);
+    value identityInfo = IdentityInfo(tag, false);
+    value identityOctets = identityInfo.encoded;
+    value lengthOctetsOffset = identityOctets.size;
+    value encodedLength = encodeLength(val.size);
+    return OctetString(identityOctets.chain(encodedLength).chain(val).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false);
 }
 
 shared object octetStringDecoder
         extends Decoder<OctetString>()
 {
-    shared actual [OctetString, Integer, Boolean] | DecodingError decodeGivenTag(Byte[] input, Integer offset, Integer identityOctetsOffset)
+    shared actual [OctetString, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
-        variable Boolean violatesDer = false;
-        
-        value r = decodeLengthOctets(input, offset);
-        if (is DecodingError r) {
-            return r;
-        }
-        value [length, contentStart, violate0] = r;
-        violatesDer ||= violate0;
-
-        return [OctetString(input[identityOctetsOffset .. contentStart + length - 1], violatesDer, contentStart), contentStart + length, violatesDer];
+        Integer nextPos = offset + length;
+        value os = OctetString(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer);
+        return [os, nextPos];
     }
 }

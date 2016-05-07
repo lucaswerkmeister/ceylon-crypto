@@ -1,12 +1,17 @@
-import de.dlkw.ccrypto.api.asn1old {
+import de.dlkw.ccrypto.api.asn1 {
+    ObjectIdentifier,
+    asn1Null,
+    Asn1Null
+}
+/*import de.dlkw.ccrypto.api.asn1old {
     ObjectIdentifier,
     asn1Null
-}
-import de.dlkw.ccrypto.api.asn1old.pkcs {
+}*/
+import de.dlkw.ccrypto.api.asn1.pkcs {
     id_sha1,
-    AlgorithmIdentifier
+    AlgorithmIdentifier,
+    mkAlgId = algorithmIdentifier
 }
-
 """
    Implementation of the SHA-1 message digest (hash) algorithm
    implemented from the pseudocode in the [Wikipedia article](https://en.wikipedia.org/wiki/SHA-1)
@@ -25,7 +30,7 @@ shared class Sha1()
     shared actual Integer? maxMessageLength = null;
     
     shared actual ObjectIdentifier objectIdentifier => id_sha1;
-    shared actual AlgorithmIdentifier algorithmIdentifier = AlgorithmIdentifier(objectIdentifier, asn1Null);
+    shared actual AlgorithmIdentifier<Asn1Null> algorithmIdentifier = mkAlgId<Asn1Null>(objectIdentifier, asn1Null());
 
     shared actual Sha1 reset()
     {
