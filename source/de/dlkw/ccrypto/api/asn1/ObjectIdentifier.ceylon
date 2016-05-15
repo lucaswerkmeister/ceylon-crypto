@@ -11,6 +11,16 @@ shared class ObjectIdentifier extends Asn1Value<[Integer*]>
     {
         return objectIdentifier(val.withTrailing(last), tag);
     }
+    
+    shared actual Boolean equals(Object other)
+    {
+        if (!is ObjectIdentifier other) {
+            return false;
+        }
+        return val == other.val;
+    }
+    
+    shared actual Integer hash => val.hash;
 }
 
 shared ObjectIdentifier objectIdentifier([Integer*] parts, Tag tag = UniversalTag.objectIdentifier)

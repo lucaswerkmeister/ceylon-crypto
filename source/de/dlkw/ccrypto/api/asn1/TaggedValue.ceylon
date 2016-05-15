@@ -1,4 +1,4 @@
-shared class TaggedValue<Type>(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Tag tag, Type wrapped)
+shared class TaggedValue<out Type>(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Tag tag, Type wrapped)
         extends Asn1Value<Type>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, wrapped)
         given Type satisfies GenericAsn1Value
 {

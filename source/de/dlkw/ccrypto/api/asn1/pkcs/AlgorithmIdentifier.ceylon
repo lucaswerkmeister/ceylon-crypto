@@ -9,10 +9,11 @@ import de.dlkw.ccrypto.api.asn1 {
     Option,
     IdentityInfo,
     Tag,
-    UniversalTag
+    UniversalTag,
+    Asn1Null
 }
 
-shared class AlgorithmIdentifier<out Parameters>
+shared class AlgorithmIdentifier<out Parameters = Asn1Value<Anything>>
         extends Asn1Sequence<[ObjectIdentifier, Parameters]>
         given Parameters satisfies Asn1Value<Anything>
         {

@@ -75,7 +75,7 @@ given Element satisfies GenericAsn1Value
 {
     shared Tag tag;
 
-    shared Decoder<Element>(GenericAsn1Value?[]) decoder;
+    shared <Decoder<Element>|DecodingError>(GenericAsn1Value?[]) decoder;
     shared Element|Option default;
 }
 
@@ -131,7 +131,7 @@ shared class GenericSequenceDecoder()
     }
 }
 
-shared class SequenceDecoder<Types>(els)
+shared class SequenceDecoder<out Types>(els)
         extends Decoder<Asn1Sequence<Types>>()
         given Types satisfies [GenericAsn1Value?+]
 {
@@ -155,7 +155,11 @@ shared class SequenceDecoder<Types>(els)
             variable Boolean found = false;
             while (!is Finished el = defIter.next()) {
                 if (l0.tag.tagClass == el.tag.tagClass && l0.tag.tagNumber == el.tag.tagNumber) {
-                    value decoded = el.decoder(tmpResult).decodeGivenTag(input, lengthAndContentStart, l0, startPos, violatesDer);
+                    value decoder = el.decoder(tmpResult);
+                    if (is DecodingError decoder) {
+                        return DecodingError(lengthAndContentStart, decoder.message);
+                    }
+                    value decoded = decoder.decodeGivenTag(input, lengthAndContentStart, l0, startPos, violatesDer);
                     if (is DecodingError decoded) {
                         return decoded;
                     }

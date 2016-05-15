@@ -6,6 +6,16 @@ shared class Asn1Integer extends Asn1Value<Integer>
     
     shared actual String asn1ValueString => "INTEGER ``val``";
     shared actual Tag defaultTag => UniversalTag.integer;
+    
+    shared actual Boolean equals(Object other)
+    {
+        if (!is Asn1Integer other) {
+            return false;
+        }
+        return val == other.val;
+    }
+    
+    shared actual Integer hash => val.hash;
 }
 
 shared Asn1Integer asn1Integer(Integer valu, Tag tag = UniversalTag.integer)
