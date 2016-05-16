@@ -5,6 +5,7 @@ shared class ObjectIdentifier extends Asn1Value<[Integer*]>
     {}
 
     shared actual String asn1ValueString => "OBJECT IDENTIFIER ``".".join(val.map((x) => x.string))``";
+    shared actual String string => ".".join(val.map((x) => x.string));
     shared actual Tag defaultTag => UniversalTag.objectIdentifier;
     
     shared ObjectIdentifier withTrailing(Integer last, Tag tag = UniversalTag.objectIdentifier)

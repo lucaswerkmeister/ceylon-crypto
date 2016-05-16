@@ -6,7 +6,6 @@ import de.dlkw.ccrypto.api.asn1 {
     Descriptor,
     objectIdentifierDecoder,
     UniversalTag,
-    IdentityInfo,
     nullDecoder,
     Decoder,
     Asn1Null,
@@ -14,18 +13,12 @@ import de.dlkw.ccrypto.api.asn1 {
     hexdump,
     objectIdentifier,
     Tag,
-    TaggedValue,
-    Asn1Integer,
     Asn1Sequence,
-    EncodingError,
-    encodeAsn1Sequence,
     taggedValue,
-    asn1Integer,
     asn1IntegerDecoder,
     genericAsn1ValueDecoder,
     GenericAsn1Value,
     TaggedValueDecoder,
-    GenericSequenceDecoder,
     AnySwitchRegistry
 }
 import de.dlkw.ccrypto.api.asn1.pkcs {
@@ -34,31 +27,16 @@ import de.dlkw.ccrypto.api.asn1.pkcs {
     rsaSsaPssOid,
     algorithmIdentifier,
     mgf1Oid,
-    id_sha1
+    id_sha1,
+    rsaSsaParams,
+    AlgorithmIdentifierDecoder,
+    RsaSsaParamsDecoder,
+    RsaSsaParameters,
+    sha1AlgId,
+    sha256AlgId
 }
 
 
-shared class AlgorithmIdentifierDecoder<P>(Descriptor<P> parameterDescriptor)
-        extends Decoder<AlgorithmIdentifier<P | Asn1Null>>()
-        given P satisfies Asn1Value<Anything>
-{
-    // FIXME tag of desc, make default tag of decoder
-    value delegate = SequenceDecoder<[ObjectIdentifier, P | Asn1Null]>([Descriptor<ObjectIdentifier>(UniversalTag.objectIdentifier, (_)=>objectIdentifierDecoder), Descriptor<P | Asn1Null>(parameterDescriptor.tag, parameterDescriptor.decoder, asn1Null())]);
-
-    shared actual [AlgorithmIdentifier<P | Asn1Null>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
-    {
-        value x = delegate.decodeGivenTagAndLength(input, offset, identityInfo, length, identityOctetsOffset, lengthOctetsOffset, violatesDer);
-        if (is DecodingError x) {
-            return x;
-        }
-        value [seq, nextPos] = x;
-        violatesDer ||= seq.violatesDer;
-
-        value erg = AlgorithmIdentifier<P | Asn1Null>.direct(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer, seq.val);
-        return [erg, nextPos];
-    }
-
-}
 
 shared class XxAlgorithmIdentifierAnySwitch<P>()
         given P satisfies Asn1Value<Anything>
@@ -174,39 +152,6 @@ shared void creAlgIdRsaSsaPssSha256()
     print(decoded[0].asn1String);
 }
 
-shared class RsaSsaParams<out HP1, out HP2>
-        extends Asn1Sequence<[TaggedValue<AlgorithmIdentifier<HP1>>, TaggedValue<AlgorithmIdentifier<HP2>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>]>
-        given HP1 satisfies Asn1Value<Anything>
-        given HP2 satisfies Asn1Value<Anything>
-{
-    shared new (encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, violatesDer, val)
-            extends super.internal(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, val)
-    {
-        Byte[] encoded;
-        Boolean violatesDer;
-        [TaggedValue<AlgorithmIdentifier<HP1>>, TaggedValue<AlgorithmIdentifier<HP2>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>] val;
-    }
-
-    shared AlgorithmIdentifier<HP1> digestAlgorithmId => val[0].val;
-    shared AlgorithmIdentifier<HP2> mgfAlgorithmId => val[1].val;
-    shared Integer saltLength => val[2].val.val;
-}
-
-shared RsaSsaParams<HP1, HP2> rsaSsaParams<HP1, HP2>(AlgorithmIdentifier<HP1> hashAlgorithm, AlgorithmIdentifier<HP2> mgfAlgorithm, Integer saltLength = 20, Integer trailerField = 1, Tag tag = UniversalTag.sequence)
-        given HP1 satisfies Asn1Value<Anything>
-        given HP2 satisfies Asn1Value<Anything>
-{
-    value aHashAlgorithm = taggedValue(hashAlgorithm, Tag(0));
-    value aMgfAlgorithm = taggedValue(mgfAlgorithm, Tag(1));
-    value aSaltLength = taggedValue(asn1Integer(saltLength), Tag(2));
-    value aTrailerField = taggedValue(asn1Integer(trailerField), Tag(3));
- 
-    value x = encodeAsn1Sequence([aHashAlgorithm, aMgfAlgorithm, aSaltLength, aTrailerField], [asn1Null(), asn1Null(), asn1Integer(20), asn1Integer(1)], tag);
-    assert (!is EncodingError x);
-    value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = x;
-   
-    return RsaSsaParams<HP1, HP2>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, [aHashAlgorithm, aMgfAlgorithm, aSaltLength, aTrailerField]);
-}
 
 
 
@@ -241,61 +186,14 @@ shared class RsaSsaParamsDecoder<HP1, HP2>(hashAlgIdDescriptor, mgfAlgIdDescript
 }
 */
 
- shared class RsaSsaParamsDecoder<out HP1, out HP2>(hashAlgIdDescriptor, mgfAlgIdDescriptor)
-        extends Decoder<RsaSsaParams<HP1, HP2>>()
-        given HP1 satisfies Asn1Value<Anything>
-        given HP2 satisfies Asn1Value<Anything>
- {//value t = TaggedValueDecoder<AlgorithmIdentifier<Asn1Value<Anything>>>(AlgorithmIdentifierDecoder(Descriptor(UniversalTag.sequence, vv)));
-    Descriptor<HP1> hashAlgIdDescriptor;
-    Descriptor<HP2> mgfAlgIdDescriptor;
-
-    value delegate = SequenceDecoder<[TaggedValue<AlgorithmIdentifier<HP1 | Asn1Null>>, TaggedValue<AlgorithmIdentifier<HP2 | Asn1Null>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>]>([
-            Descriptor<TaggedValue<AlgorithmIdentifier<HP1 | Asn1Null>>>(
-                Tag(0),
-                let (d =([GenericAsn1Value? *]y)
-                {
-                    value vv = hashAlgIdDescriptor.decoder(y);
-                    if (!is DecodingError vv) {
-                        return TaggedValueDecoder<AlgorithmIdentifier<HP1 | Asn1Null>>(AlgorithmIdentifierDecoder<HP1>(Descriptor(UniversalTag.sequence, (_)=>vv)));
-                    }
-                    return vv;
-                }) d), 
-            Descriptor<TaggedValue<AlgorithmIdentifier<HP2 | Asn1Null>>>(
-                Tag(1), 
-                (y)
-                {
-                    value vv = mgfAlgIdDescriptor.decoder(y);
-                    if (!is DecodingError vv)
-                    {
-                        return TaggedValueDecoder<AlgorithmIdentifier<HP2 | Asn1Null>>(AlgorithmIdentifierDecoder<HP2>(Descriptor(UniversalTag.sequence, (_)=>vv)));
-                    }
-                    return vv;
-                }),
-             Descriptor<TaggedValue<Asn1Integer>>(Tag(2), (_)=>TaggedValueDecoder(asn1IntegerDecoder)), Descriptor<TaggedValue<Asn1Integer>>(Tag(3), (_)=>TaggedValueDecoder(asn1IntegerDecoder))]);
-
-    shared actual [RsaSsaParams<HP1,HP2>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer contentStart, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
-    {
-        value x = delegate.decodeGivenTagAndLength(input, contentStart, identityInfo, length, identityOctetsOffset, lengthOctetsOffset, violatesDer);
-        if (is DecodingError x) {
-            return x;
-        }
-        value [seq, nextPos] = x;
-        violatesDer ||= seq.violatesDer;
-        
-        assert (is [TaggedValue<AlgorithmIdentifier<HP1>>, TaggedValue<AlgorithmIdentifier<HP2>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>] dec = seq.val);
- 
-        value erg = RsaSsaParams<HP1, HP2>(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, contentStart, violatesDer, dec);
-        return [erg, nextPos];
-    }
- }
 
         
 
 shared void xpp()
 {
-    value v = rsaSsaParams<Asn1Null, AlgorithmIdentifier<Asn1Null>>(algorithmIdentifier<Asn1Null>(id_sha1, asn1Null()),
-                                               algorithmIdentifier<AlgorithmIdentifier<Asn1Null>>(mgf1Oid, algorithmIdentifier<Asn1Null>(id_sha1, asn1Null())),
-                                           20, 1);
+    value v = rsaSsaParams<Asn1Null, AlgorithmIdentifier<Asn1Null>>(algorithmIdentifier<Asn1Null>(id_sha256, asn1Null()),
+                                               algorithmIdentifier<AlgorithmIdentifier<Asn1Null>>(mgf1Oid, algorithmIdentifier<Asn1Null>(id_sha256, asn1Null())),
+                                           32, 1);
     print(v.encoded);
     print(v.asn1String);
     
@@ -415,13 +313,42 @@ shared void xpp()
             print((xx.message else "") + " at " + xx.offset.string);
             return;
         }
+        value [sigAlgId, nextPos] = xx;
+        
+        if (sigAlgId.objectIdentifier == rsaSsaPssOid) {
+            print("using RSASSA-PSS signature");
+            assert (is RsaSsaParameters<Asn1Value<Anything>, Asn1Value<Anything>> params = sigAlgId.parameters);
+            if (params.digestAlgorithmId.objectIdentifier == id_sha1) {
+                print("using SHA-1 as digest");
+            }
+            else if (params.digestAlgorithmId.objectIdentifier == id_sha256) {
+                print("using SHA-256 as digest");
+            }
+            
+            if (params.mgfAlgorithmId.objectIdentifier == mgf1Oid) {
+                assert (is AlgorithmIdentifier<> mgf1Hash = params.mgfAlgorithmId.parameters); 
+                if (mgf1Hash.objectIdentifier == id_sha1) {
+                    print("using SHA-1 as digest in MGF1");
+                }
+                else if (mgf1Hash.objectIdentifier == id_sha256) {
+                    print("using SHA-256 as digest in MGF1");
+                }
+            }
+            else {
+                throw AssertionError("unsupported mask generating function ``params.mgfAlgorithmId.objectIdentifier``.");
+            }
+        }
+        else {
+            throw AssertionError("unsupported signature algorithm ``sigAlgId.objectIdentifier``");
+        }
+        
         print(xx[0].encoded);
         print(xx[0].asn1String);
     }
     
     
     
-    print("X");
+    print("XY");
     value hashDecoder = AlgorithmIdentifierDecoder(Descriptor(UniversalTag.null, (_)=>nullDecoder));
     value hashDescr = Descriptor(UniversalTag.sequence, (_)=>hashDecoder);
     value mgfDecoder = AlgorithmIdentifierDecoder(Descriptor(UniversalTag.sequence, (_)=>AlgorithmIdentifierDecoder(hashDescr)));
