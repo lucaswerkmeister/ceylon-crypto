@@ -1,12 +1,12 @@
 import de.dlkw.ccrypto.api.asn1 {
     asn1Null,
     hexdump,
-    nullDecoder,
     DecodingError,
     Tag,
-    genericAsn1ValueDecoder,
     taggedValue,
-    TaggedValueDecoder
+    TaggedValueDecoder,
+    Asn1NullDecoder,
+    GenericAsn1ValueDecoder
 }
 
 shared void tutTaggedNull01()
@@ -21,7 +21,7 @@ shared void tutTaggedNull02()
     value val = taggedValue(asn1Null(), Tag(15));
     value encoded = val.encoded;
     
-    value val2 = TaggedValueDecoder(nullDecoder).decode(encoded);
+    value val2 = TaggedValueDecoder(Tag(15), Asn1NullDecoder()).decode(encoded);
     if (is DecodingError val2) {
         throw AssertionError(val2.message else "");
     }
@@ -35,7 +35,7 @@ shared void tutTaggedNull03()
     value val = taggedValue(asn1Null(Tag(2)), Tag(15));
     value encoded = val.encoded;
     
-    value val2 = TaggedValueDecoder(nullDecoder).decode(encoded);
+    value val2 = TaggedValueDecoder(Tag(15), Asn1NullDecoder()).decode(encoded);
     if (is DecodingError val2) {
         throw AssertionError(val2.message else "");
     }
@@ -48,7 +48,7 @@ shared void tutTaggedNull04()
     value val = taggedValue(asn1Null(), Tag(15));
     value encoded = val.encoded;
     
-    value val2 = genericAsn1ValueDecoder.decode(encoded);
+    value val2 = GenericAsn1ValueDecoder().decode(encoded);
     if (is DecodingError val2) {
         throw AssertionError(val2.message else "");
     }
@@ -61,7 +61,7 @@ shared void tutTaggedNull04b()
     value val = taggedValue(asn1Null(), Tag(15));
     value encoded = val.encoded;
     
-    value val2 = TaggedValueDecoder(genericAsn1ValueDecoder).decode(encoded);
+    value val2 = TaggedValueDecoder(Tag(15), GenericAsn1ValueDecoder()).decode(encoded);
     if (is DecodingError val2) {
         throw AssertionError(val2.message else "");
     }

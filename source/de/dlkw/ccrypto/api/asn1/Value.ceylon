@@ -15,8 +15,8 @@ shared class GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, content
     shared default String asn1ValueString => "generic contents ``hexdump(contentOctets)``";
 }
 
-shared object genericAsn1ValueDecoder
-        extends Decoder<GenericAsn1Value>()
+shared class GenericAsn1ValueDecoder(Tag? tag = null)
+        extends Decoder<GenericAsn1Value>(tag)
 {
     shared actual [GenericAsn1Value, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, Boolean violatesDer)
     {

@@ -19,8 +19,8 @@ shared TaggedValue<Type> taggedValue<Type>(Type wrapped, Tag tag)
     return TaggedValue(encoded, identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, tag, wrapped);
 }
 
-shared class TaggedValueDecoder<Type>(Decoder<Type> innerDecoder)
-        extends Decoder<TaggedValue<Type>>()
+shared class TaggedValueDecoder<Type>(Tag tag, Decoder<Type> innerDecoder)
+        extends Decoder<TaggedValue<Type>>(tag)
         given Type satisfies GenericAsn1Value
 {
     shared actual [TaggedValue<Type>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)

@@ -3,19 +3,17 @@ import de.dlkw.ccrypto.api.asn1 {
     Asn1Sequence,
     Asn1Value,
     objectIdentifier,
-    asn1Null,
     encodeAsn1Sequence,
     EncodingError,
     Option,
     IdentityInfo,
     Tag,
     UniversalTag,
-    Asn1Null,
     Descriptor,
     Decoder,
     SequenceDecoder,
-    objectIdentifierDecoder,
-    DecodingError
+    DecodingError,
+    ObjectIdentifierDecoder
 }
 
 """
@@ -31,32 +29,31 @@ import de.dlkw.ccrypto.api.asn1 {
    ```
    """
 shared class AlgorithmIdentifier<out Parameters = Asn1Value<Anything>>
-        extends Asn1Sequence<[ObjectIdentifier, Parameters | Asn1Null]>
+        extends Asn1Sequence<[ObjectIdentifier, Parameters?]>
         given Parameters satisfies Asn1Value<Anything>
 {
-    shared new direct(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, [ObjectIdentifier, Parameters | Asn1Null] valu)
+    shared new direct(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, [ObjectIdentifier, Parameters?] valu)
             extends super.internal(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, valu)
     {}
     
     shared ObjectIdentifier objectIdentifier => val[0];
-    shared Parameters | Asn1Null parameters => val[1];
+    shared Parameters? parameters => val[1];
 }
 
-shared AlgorithmIdentifier<Parameters> algorithmIdentifier<Parameters>(ObjectIdentifier oid, Parameters parameters, Tag tag = UniversalTag.sequence)
+shared AlgorithmIdentifier<Parameters> algorithmIdentifier<Parameters>(ObjectIdentifier oid, Parameters? parameters, Tag tag = UniversalTag.sequence)
         given Parameters satisfies Asn1Value<Anything>
 {
-    value x = encodeAsn1Sequence([oid, parameters], [Option.mandatory, asn1Null()], tag);
+    value x = encodeAsn1Sequence([oid, parameters], [Option.mandatory, Option.optional], tag);
     assert (!is EncodingError x);
     value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = x;
     return AlgorithmIdentifier<Parameters>.direct(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, [oid, parameters]);
 }
 
-shared class AlgorithmIdentifierDecoder<P>(Descriptor<P> parameterDescriptor)
-        extends Decoder<AlgorithmIdentifier<P>>()
+shared class AlgorithmIdentifierDecoder<P>(Descriptor<P> parameterDescriptor, Tag tag = UniversalTag.sequence)
+        extends Decoder<AlgorithmIdentifier<P>>(tag)
         given P satisfies Asn1Value<Anything>
-        {
-    // FIXME tag of desc, make default tag of decoder
-    value delegate = SequenceDecoder<[ObjectIdentifier, P | Asn1Null]>([Descriptor<ObjectIdentifier>(UniversalTag.objectIdentifier, (_)=>objectIdentifierDecoder), Descriptor<P | Asn1Null>(parameterDescriptor.tag, parameterDescriptor.decoder, asn1Null())]);
+{
+    value delegate = SequenceDecoder<[ObjectIdentifier, P?]>([Descriptor<ObjectIdentifier>((_)=>ObjectIdentifierDecoder()), Descriptor<P>(parameterDescriptor.decoder, Option.optional)]);
     
     shared actual [AlgorithmIdentifier<P>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
@@ -82,6 +79,6 @@ shared ObjectIdentifier id_sha256 = objectIdentifier([2, 16, 840, 1, 101, 3, 4, 
 shared ObjectIdentifier rsaSsaPssOid = pkcs1Oid.withTrailing(10);
 shared ObjectIdentifier mgf1Oid = pkcs1Oid.withTrailing(8);
 
-shared AlgorithmIdentifier sha1AlgId = algorithmIdentifier(id_sha1, asn1Null());
-shared AlgorithmIdentifier sha256AlgId = algorithmIdentifier(id_sha256, asn1Null());
+shared AlgorithmIdentifier<> sha1AlgId = algorithmIdentifier(id_sha1, null);
+shared AlgorithmIdentifier<> sha256AlgId = algorithmIdentifier(id_sha256, null);
 

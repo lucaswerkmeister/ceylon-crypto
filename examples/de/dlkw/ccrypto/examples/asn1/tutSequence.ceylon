@@ -10,13 +10,12 @@ import de.dlkw.ccrypto.api.asn1 {
     taggedValue,
     Tag,
     SequenceDecoder,
-    asn1IntegerDecoder,
     Descriptor,
     Asn1Integer,
     TaggedValue,
     TaggedValueDecoder,
-    UniversalTag,
-    hexdump
+    hexdump,
+    Asn1IntegerDecoder
 }
 
 shared void tutSequence01()
@@ -101,8 +100,8 @@ shared void tutSequence05()
     value seqA = seq02();
     value encoded = seqA.encoded;
     
-    value res0 = SequenceDecoder<[TaggedValue<Asn1Integer>, Asn1Integer]>([Descriptor<TaggedValue<Asn1Integer>>(Tag(88), (_)=>TaggedValueDecoder(asn1IntegerDecoder)),
-        Descriptor(UniversalTag.integer, (_)=>asn1IntegerDecoder)]).decode(encoded);
+    value res0 = SequenceDecoder<[TaggedValue<Asn1Integer>, Asn1Integer]>([Descriptor<TaggedValue<Asn1Integer>>((_)=>TaggedValueDecoder(Tag(88), Asn1IntegerDecoder())),
+        Descriptor((_)=>Asn1IntegerDecoder())]).decode(encoded);
     if (is DecodingError res0) {
         throw AssertionError(res0.message else "");
     }
@@ -116,8 +115,8 @@ shared void tutSequence06()
     value seqA = seq02b();
     value encoded = seqA.encoded;
     
-    value res0 = SequenceDecoder<[TaggedValue<Asn1Integer>?, Asn1Integer?]>([Descriptor<TaggedValue<Asn1Integer>>(Tag(88), (_)=>TaggedValueDecoder(asn1IntegerDecoder), Option.optional),
-        Descriptor(UniversalTag.integer, (_)=>asn1IntegerDecoder, Option.optional)]).decode(encoded);
+    value res0 = SequenceDecoder<[TaggedValue<Asn1Integer>?, Asn1Integer?]>([Descriptor<TaggedValue<Asn1Integer>>((_)=>TaggedValueDecoder(Tag(88), Asn1IntegerDecoder()), Option.optional),
+        Descriptor((_)=>Asn1IntegerDecoder(), Option.optional)]).decode(encoded);
     if (is DecodingError res0) {
         throw AssertionError(res0.message else "");
     }
@@ -132,8 +131,8 @@ shared void tutSequence07()
     value encoded = seqA.encoded;
     
     // FIXME default value needs no tag... take from descriptor
-    value res0 = SequenceDecoder<[TaggedValue<Asn1Integer>?, Asn1Integer?]>([Descriptor<TaggedValue<Asn1Integer>>(Tag(88), (_)=>TaggedValueDecoder(asn1IntegerDecoder), taggedValue(asn1Integer(19), Tag(88))),
-        Descriptor(UniversalTag.integer, (_)=>asn1IntegerDecoder, Option.optional)]).decode(encoded);
+    value res0 = SequenceDecoder<[TaggedValue<Asn1Integer>?, Asn1Integer?]>([Descriptor<TaggedValue<Asn1Integer>>((_)=>TaggedValueDecoder(Tag(88), Asn1IntegerDecoder()), taggedValue(asn1Integer(19), Tag(88))),
+        Descriptor((_)=>Asn1IntegerDecoder(), Option.optional)]).decode(encoded);
     if (is DecodingError res0) {
         throw AssertionError(res0.message else "");
     }

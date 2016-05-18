@@ -226,7 +226,7 @@ shared [Byte+] encodeLength(variable Integer length)
     return encodedLength.withLeading(encodedLength.size.byte.or($1000_0000.byte));
 }
 
-shared abstract class Decoder<out Asn1Type>()
+shared abstract class Decoder<out Asn1Type>(shared Tag? tag)
         given Asn1Type satisfies GenericAsn1Value
 {
     shared [Asn1Type, Integer] | DecodingError decode("The input to decode. Must be encoded according to the BER." Byte[] input,
@@ -241,6 +241,12 @@ shared abstract class Decoder<out Asn1Type>()
         value [identityOctets, lengthAndContentStart, violates0] = res0;
         violatesDer ||= violates0;
         
+        if (exists tag) {
+            if (identityOctets.tag != tag) {
+                return DecodingError(offset, "expected tag ``tag`` but got ``identityOctets.tag``.");
+            }
+        }
+        
         value res1 = decodeGivenTag(input, lengthAndContentStart, identityOctets, offset, violatesDer);
         if (is DecodingError res1) {
             return res1;
@@ -249,7 +255,7 @@ shared abstract class Decoder<out Asn1Type>()
     }
 
     shared [Asn1Type, Integer] | DecodingError decodeGivenTag(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer identityOctetsOffset, variable Boolean violatesDer)
-    {
+    { print("decoding using ``this``");
         value r = decodeLengthOctets(input, offset);
         if (is DecodingError r) {
             return r;

@@ -58,8 +58,8 @@ shared Asn1Integer asn1Integer(Integer valu, Tag tag = UniversalTag.integer)
     return Asn1Integer(identityOctets.chain(encodedLength).chain(encoded).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, valu);
 }
 
-shared object asn1IntegerDecoder
-        extends Decoder<Asn1Integer>()
+shared class Asn1IntegerDecoder(Tag tag = UniversalTag.integer)
+        extends Decoder<Asn1Integer>(tag)
 {
     shared actual [Asn1Integer, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {

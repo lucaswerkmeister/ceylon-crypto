@@ -4,15 +4,15 @@ import ceylon.test {
 
 import de.dlkw.ccrypto.api.asn1 {
     asn1Integer,
-    asn1IntegerDecoder,
-    DecodingError
+    DecodingError,
+    Asn1IntegerDecoder
 }
 
 class IntegerTest()
 {
     void perform(Byte[] buf, Integer val, Integer offset = 0)
     {
-        value r = asn1IntegerDecoder.decode(buf, offset);
+        value r = Asn1IntegerDecoder().decode(buf, offset);
         assert (!is DecodingError r);
         assert (!r[0].violatesDer);
         assert (r[0].val == val);
@@ -65,7 +65,7 @@ class IntegerTest()
     shared void decodeInt0x()
     {
         value buf = [ #02.byte, #00.byte ];
-        value r = asn1IntegerDecoder.decode(buf);
+        value r = Asn1IntegerDecoder().decode(buf);
         assert (is DecodingError r);
         print(r.message);
     }
@@ -74,7 +74,7 @@ class IntegerTest()
     shared void decodeInt1v()
     {
         value buf = [ #02.byte, #02.byte, #00.byte, #01.byte ];
-        value r = asn1IntegerDecoder.decode(buf);
+        value r = Asn1IntegerDecoder().decode(buf);
         assert (is DecodingError r);
         print(r.message);
     }
@@ -97,7 +97,7 @@ class IntegerTest()
     shared void decodeIntm1x()
     {
         value buf = [ #02.byte, #02.byte, #ff.byte, #ff.byte ];
-        value r = asn1IntegerDecoder.decode(buf);
+        value r = Asn1IntegerDecoder().decode(buf);
         assert (is DecodingError r);
     }
 }

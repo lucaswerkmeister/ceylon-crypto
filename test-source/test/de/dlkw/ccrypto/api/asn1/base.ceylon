@@ -10,8 +10,7 @@ import de.dlkw.ccrypto.api.asn1 {
     Tag,
     UniversalTag,
     decodeLengthOctets,
-    encodeLength,
-    asn1IntegerDecoder
+    encodeLength
 }
 
 test

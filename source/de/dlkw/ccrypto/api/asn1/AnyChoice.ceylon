@@ -7,6 +7,7 @@ shared interface AnySwitch
     shared Decoder<Asn1Value<Anything>> | DecodingError selectDecoder(GenericAsn1Value?[] decodedElements)
     {
         value discriminator = relevantDiscriminator(decodedElements);
+        print("switching for ``discriminator``");
         if (exists decoder = selectDecoderDefinedBy(discriminator)) {
             return decoder;
         }
@@ -18,7 +19,7 @@ shared abstract class AnySwitchRegistry(Map<ObjectIdentifier | Asn1Integer, Deco
         satisfies AnySwitch
 {
     shared actual Decoder<Asn1Value<Anything>>? selectDecoderDefinedBy(ObjectIdentifier | Asn1Integer discriminator)
-    {
+    {print("hallo");
         return registeredDecoders.get(discriminator);
     }
 }

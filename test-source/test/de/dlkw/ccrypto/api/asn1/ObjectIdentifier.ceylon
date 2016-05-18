@@ -1,15 +1,11 @@
+import ceylon.test {
+    test
+}
+
 import de.dlkw.ccrypto.api.asn1 {
-    objectIdentifierDecoder,
-    IdentityInfo,
-    TagClass,
     DecodingError,
     objectIdentifier,
-    Tag,
-    UniversalTag
-}
-import ceylon.test {
-    test,
-    fail
+    ObjectIdentifierDecoder
 }
 
 /*
@@ -25,7 +21,7 @@ test
 void decodeOID1()
 {
     value buf = [ #06.byte, #02.byte, #92.byte, #0f.byte ];
-    value r = objectIdentifierDecoder.decode(buf);
+    value r = ObjectIdentifierDecoder().decode(buf);
     if (is DecodingError r) {
         print(r.message);
         assert(false);
@@ -42,7 +38,7 @@ void decodeOID2()
     value x = objectIdentifier([1, 2, 3, 400000000, 5]);
     print(x.asn1String);
     print(x.encoded);
-    value y = objectIdentifierDecoder.decode([99.byte, 99.byte, 99.byte, 99.byte, 6.byte, 8.byte, *x.encoded], 6);
+    value y = ObjectIdentifierDecoder().decode([99.byte, 99.byte, 99.byte, 99.byte, 6.byte, 8.byte, *x.encoded], 6);
     if (is DecodingError y) {
         print(y.message);
         assert(false);

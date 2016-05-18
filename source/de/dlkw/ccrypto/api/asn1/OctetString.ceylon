@@ -18,8 +18,8 @@ shared OctetString octetString(variable Byte[] val, Tag tag = UniversalTag.octet
     return OctetString(identityOctets.chain(encodedLength).chain(val).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false);
 }
 
-shared object octetStringDecoder
-        extends Decoder<OctetString>()
+shared class OctetStringDecoder(Tag tag = UniversalTag.octetString)
+        extends Decoder<OctetString>(tag)
 {
     shared actual [OctetString, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {

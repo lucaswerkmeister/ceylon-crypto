@@ -9,16 +9,16 @@ import ceylon.test {
 
 import de.dlkw.ccrypto.api.asn1 {
     DecodingError,
-    octetStringDecoder,
     octetString,
-    OctetString
+    OctetString,
+    OctetStringDecoder
 }
 
 shared class OctetStringTest()
 {
     void perform(Byte[] buf, Byte[] val, Integer offset = 0)
     {
-        value r = octetStringDecoder.decode(buf, offset);
+        value r = OctetStringDecoder().decode(buf, offset);
         if (is DecodingError r) {
             print(r.message);
             fail("error");

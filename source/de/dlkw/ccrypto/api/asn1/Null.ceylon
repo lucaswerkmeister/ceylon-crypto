@@ -17,8 +17,8 @@ shared Asn1Null asn1Null(Tag tag = UniversalTag.null)
     return Asn1Null(identityOctets.withTrailing(0.byte), identityInfo, lengthOctetsOffset, lengthOctetsOffset + 1, false);
 }
 
-shared object nullDecoder
-        extends Decoder<Asn1Null>()
+shared class Asn1NullDecoder(Tag tag = UniversalTag.null)
+        extends Decoder<Asn1Null>(tag)
 {
     shared actual [Asn1Null, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {

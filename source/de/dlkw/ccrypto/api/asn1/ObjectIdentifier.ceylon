@@ -58,8 +58,8 @@ shared ObjectIdentifier objectIdentifier([Integer*] parts, Tag tag = UniversalTa
     return ObjectIdentifier.internal(identityOctets.chain(encodedLength).chain(encoded).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, parts);
 }
 
-shared object objectIdentifierDecoder
-        extends Decoder<ObjectIdentifier>()
+shared class ObjectIdentifierDecoder(Tag tag = UniversalTag.objectIdentifier)
+        extends Decoder<ObjectIdentifier>(tag)
 {
     [Integer, Integer] | DecodingError decodeOidComponent(Byte[] input, variable Integer contentStart)
     {

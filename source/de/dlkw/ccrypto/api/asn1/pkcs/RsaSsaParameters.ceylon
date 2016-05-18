@@ -12,13 +12,13 @@ import de.dlkw.ccrypto.api.asn1 {
     EncodingError,
     Asn1Value,
     GenericAsn1Value,
-    asn1IntegerDecoder,
     DecodingError,
     TaggedValueDecoder,
     Descriptor,
     Decoder,
     Asn1Null,
-    SequenceDecoder
+    SequenceDecoder,
+    Asn1IntegerDecoder
 }
 
 """
@@ -87,42 +87,52 @@ shared RsaSsaParameters<HashAlgIdParams, MgsAlgIdParams> rsaSsaParams<HashAlgIdP
     return RsaSsaParameters<HashAlgIdParams, MgsAlgIdParams>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, [aHashAlgorithm, aMgfAlgorithm, aSaltLength, aTrailerField]);
 }
 
-shared class RsaSsaParamsDecoder<out HP1, out HP2>(hashAlgIdDescriptor, mgfAlgIdDescriptor)
-        extends Decoder<RsaSsaParameters<HP1, HP2>>()
+shared class RsaSsaParamsDecoder<out HP1, out HP2>(hashAlgIdDescriptor, mgfAlgIdDescriptor, Tag tag = UniversalTag.sequence)
+        extends Decoder<RsaSsaParameters<HP1, HP2>>(tag)
         given HP1 satisfies Asn1Value<Anything>
         given HP2 satisfies Asn1Value<Anything>
 {
-    Descriptor<HP1> hashAlgIdDescriptor;
-    Descriptor<HP2> mgfAlgIdDescriptor;
+    Descriptor<AlgorithmIdentifier<HP1>> hashAlgIdDescriptor;
+    Descriptor<AlgorithmIdentifier<HP2>> mgfAlgIdDescriptor;
     
     assert (is AlgorithmIdentifier<HP1> rsaSsaDefaultHashParameter);
     assert (is AlgorithmIdentifier<HP2> rsaSsaDefaultMgfParameter);
     
-    value delegate = SequenceDecoder<[TaggedValue<AlgorithmIdentifier<HP1>>, TaggedValue<AlgorithmIdentifier<HP2 | AlgorithmIdentifier<Asn1Null>>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>]>([
+    value delegate = SequenceDecoder<[TaggedValue<AlgorithmIdentifier<HP1>>, TaggedValue<AlgorithmIdentifier<HP2>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>]>([
         Descriptor<TaggedValue<AlgorithmIdentifier<HP1>>>(
-        Tag(0),
         // use let to show type in IDE hover
-        let (d =([GenericAsn1Value? *]y)
+        (y)
             {
-            value vv = hashAlgIdDescriptor.decoder(y);
-            if (!is DecodingError vv) {
-                return TaggedValueDecoder<AlgorithmIdentifier<HP1>>(AlgorithmIdentifierDecoder<HP1>(Descriptor(UniversalTag.sequence, (_)=>vv)));
+            Decoder<AlgorithmIdentifier<HP1>?>|DecodingError v1v = hashAlgIdDescriptor.decoder(y);
+            if (is Decoder<AlgorithmIdentifier<HP1>> v1v) {
+                return TaggedValueDecoder(Tag(0), v1v);
             }
-            return vv;
-        }) d, taggedValue(rsaSsaDefaultHashParameter, Tag(0))), 
-        Descriptor<TaggedValue<AlgorithmIdentifier<HP2 | Asn1Null>>>(
-            Tag(1), 
+            else if (is Decoder<Null> v1v) {
+                value x = v1v;
+                throw AssertionError("what to do?!");
+            }
+            else if (is DecodingError v1v) {
+                return v1v;
+            }
+            throw AssertionError("cannot reach here");
+        }, taggedValue(rsaSsaDefaultHashParameter, Tag(0))), 
+        Descriptor<TaggedValue<AlgorithmIdentifier<HP2>>>( 
             (y)
             {
                 value vv = mgfAlgIdDescriptor.decoder(y);
-                if (!is DecodingError vv)
-                {
-                    return TaggedValueDecoder<AlgorithmIdentifier<HP2 | Asn1Null>>(AlgorithmIdentifierDecoder<HP2>(Descriptor(UniversalTag.sequence, (_)=>vv)));
+                if (is Decoder<AlgorithmIdentifier<HP2>> vv) {
+                    return TaggedValueDecoder(Tag(1), vv);
                 }
-                return vv;
+                else if (is Decoder<Null> vv) {
+                    throw AssertionError("what to do?!");
+                }
+                else if (is DecodingError vv) {
+                    return vv;
+                }
+                throw AssertionError("cannot reach here");
             }, taggedValue(rsaSsaDefaultMgfParameter, Tag(1))),
-            Descriptor<TaggedValue<Asn1Integer>>(Tag(2), (_)=>TaggedValueDecoder(asn1IntegerDecoder), taggedValue(asn1Integer(20), Tag(2))),
-            Descriptor<TaggedValue<Asn1Integer>>(Tag(3), (_)=>TaggedValueDecoder(asn1IntegerDecoder), taggedValue(asn1Integer(1), Tag(3)))
+            Descriptor<TaggedValue<Asn1Integer>>((_)=>TaggedValueDecoder(Tag(2), Asn1IntegerDecoder()), taggedValue(asn1Integer(20), Tag(2))),
+            Descriptor<TaggedValue<Asn1Integer>>((_)=>TaggedValueDecoder(Tag(3), Asn1IntegerDecoder()), taggedValue(asn1Integer(1), Tag(3)))
         ]);
 
     shared actual [RsaSsaParameters<HP1,HP2>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer contentStart, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
@@ -134,7 +144,8 @@ shared class RsaSsaParamsDecoder<out HP1, out HP2>(hashAlgIdDescriptor, mgfAlgId
         value [seq, nextPos] = x;
         violatesDer ||= seq.violatesDer;
         
-        assert (is [TaggedValue<AlgorithmIdentifier<HP1>>, TaggedValue<AlgorithmIdentifier<HP2>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>] dec = seq.val);
+        value dec = seq.val;
+        //assert (is [TaggedValue<AlgorithmIdentifier<HP1>>, TaggedValue<AlgorithmIdentifier<HP2>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>] dec);
         
         value erg = RsaSsaParameters<HP1, HP2>(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, contentStart, violatesDer, dec);
         return [erg, nextPos];
