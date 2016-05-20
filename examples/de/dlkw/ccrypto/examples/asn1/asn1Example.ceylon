@@ -14,8 +14,6 @@ import de.dlkw.ccrypto.api.asn1 {
     taggedValue,
     GenericAsn1Value,
     TaggedValueDecoder,
-    AnySwitchRegistry,
-    Option,
     Asn1NullDecoder,
     GenericAsn1ValueDecoder,
     ObjectIdentifierDecoder,
@@ -32,50 +30,8 @@ import de.dlkw.ccrypto.api.asn1.pkcs {
     rsaSsaParams,
     AlgorithmIdentifierDecoder,
     RsaSsaParamsDecoder,
-    RsaSsaParameters
-}
-
-
-/*
-shared class XxAlgorithmIdentifierAnySwitch<P>()
-        given P satisfies Asn1Value<Anything>
-{
-    ObjectIdentifier relevantObjectIdentifier(GenericAsn1Value?[] decodedElements)
-    {
-        assert (is ObjectIdentifier oid = decodedElements[0]);
-        return oid;
-    }
-    
-    shared Decoder<P> selectDecoder(GenericAsn1Value?[] decodedElements)
-            => selectDecoderDefinedBy(relevantObjectIdentifier(decodedElements));
-    
-    Decoder<P> selectDecoderDefinedBy(ObjectIdentifier oid)
-    {
-        if (oid.encoded == id_sha256.encoded) {
-            assert (is Decoder<P> nullDecoder);
-            return nullDecoder;
-        }
-        else if (oid.encoded == rsaSsaPssOid.encoded) {
-            value dec = RsaSsaParamsDecoder(Descriptor<ObjectIdentifier>(UniversalTag.objectIdentifier, (_)=>objectIdentifierDecoder),
-                Descriptor<Asn1Value<Anything>>(UniversalTag.sequence, selectDecoder));
-            assert (is Decoder<P> dec);
-            return dec;
-        }
-        else {
-            throw AssertionError("not a known algorithm oid: ``oid.asn1String``");
-        }
-    }
-}
-*/
-
-shared class AlgorithmIdentifierAnySwitch(Map<ObjectIdentifier, Decoder<Asn1Value<Anything>>> registeredDecoders)
-        extends AnySwitchRegistry(registeredDecoders)
-{
-    shared actual ObjectIdentifier relevantDiscriminator(GenericAsn1Value?[] decodedElements)
-    {
-        assert (is ObjectIdentifier oid = decodedElements[0]);
-        return oid;
-    }
+    RsaSsaParameters,
+    AlgorithmIdentifierAnySwitch
 }
 
 
@@ -89,7 +45,7 @@ shared class AlgorithmIdentifierAnySwitch(Map<ObjectIdentifier, Decoder<Asn1Valu
 shared void exampleAlgorithmIdentifier()
 {
     Byte[] buf = [#30.byte, #0d.byte, #06.byte, #09.byte, #60.byte, #86.byte, #48.byte, #01.byte, #65.byte, #03.byte, #04.byte, #02.byte, #03.byte, #05.byte, #00.byte ];
-    value x = AlgorithmIdentifierDecoder(Descriptor<Asn1Null>((_)=>Asn1NullDecoder(), Option.optional));
+    value x = AlgorithmIdentifierDecoder((_)=>Asn1NullDecoder());
     value y = x.decode(buf);
     if (is DecodingError y) {
         print(y.message);
@@ -106,7 +62,7 @@ shared void exampleAlgorithmIdentifier()
 shared void exampleAlgorithmIdentifierWithoutOptional()
 {
     Byte[] buf = [#30.byte, #0b.byte, #06.byte, #09.byte, #60.byte, #86.byte, #48.byte, #01.byte, #65.byte, #03.byte, #04.byte, #02.byte, #03.byte ];
-    value x = AlgorithmIdentifierDecoder(Descriptor<Asn1Null>((_)=>optionalDecoder(Asn1NullDecoder()), Option.optional));
+    value x = AlgorithmIdentifierDecoder((_)=>Asn1NullDecoder());
     value y = x.decode(buf);
     if (is DecodingError y) {
         print(y.message);
@@ -120,13 +76,10 @@ shared void exampleAlgorithmIdentifierWithoutOptional()
     }
 }
 
-shared Decoder<P?> optionalDecoder<P>(Decoder<P> wrappedDecoder)
-        given P satisfies Asn1Value<Anything> => wrappedDecoder;
-
 shared void exampleAlgorithmIdentifierWithNullDefault()
 {
     Byte[] buf = [#30.byte, #0b.byte, #06.byte, #09.byte, #60.byte, #86.byte, #48.byte, #01.byte, #65.byte, #03.byte, #04.byte, #02.byte, #03.byte, #05.byte, #00.byte ];
-    value x = AlgorithmIdentifierDecoder(Descriptor<Asn1Null>((_)=>Asn1NullDecoder(), asn1Null()));
+    value x = AlgorithmIdentifierDecoder((_)=>Asn1NullDecoder());
     value y = x.decode(buf);
     if (is DecodingError y) {
         print(y.message);
@@ -161,8 +114,7 @@ shared void creAlgIdRsaSsaPssSha256()
     print(hexdump(algId.encoded));
     
     value anySwitch = AlgorithmIdentifierAnySwitch(map<ObjectIdentifier, Decoder<Asn1Value<Anything>>>({id_sha256->Asn1NullDecoder()}));
-    value parameterDescriptor = Descriptor(anySwitch.selectDecoder);
-    value decoder = AlgorithmIdentifierDecoder(parameterDescriptor);
+    value decoder = AlgorithmIdentifierDecoder(anySwitch.selectDecoder);
     
     value decoded = decoder.decode(algId.encoded, 17);
     if (is DecodingError decoded) {
@@ -269,7 +221,7 @@ shared void xpp()
     
     if (12==2) {
         value simple = algorithmIdentifier(id_sha1, asn1Null());
-        value sd2 = AlgorithmIdentifierDecoder(Descriptor((_)=>Asn1NullDecoder()));
+        value sd2 = AlgorithmIdentifierDecoder((_)=>Asn1NullDecoder());
         print("CCC");
         print(simple.encoded);
         value xx = sd2.decode(simple.encoded);
@@ -284,7 +236,7 @@ shared void xpp()
     if (21==2) {
         value x=[48.byte, 9.byte, 6.byte, 5.byte, 43.byte, 14.byte, 3.byte, 2.byte, 26.byte, 5.byte, 0.byte];
         value sw = AlgorithmIdentifierAnySwitch(map({id_sha1->Asn1NullDecoder()}));
-        value sd2 = AlgorithmIdentifierDecoder(Descriptor(sw.selectDecoder));
+        value sd2 = AlgorithmIdentifierDecoder(sw.selectDecoder);
         value xx = sd2.decode(x);
         if (is DecodingError xx) {
             print((xx.message else "") + " at " + xx.offset.string);
@@ -307,13 +259,13 @@ shared void xpp()
         }
          */
         
-        value hashAlgIdDecoder = AlgorithmIdentifierDecoder(Descriptor(hashSw.selectDecoder));
+        value hashAlgIdDecoder = AlgorithmIdentifierDecoder(hashSw.selectDecoder);
         value hashAlgDescriptor = Descriptor((_)=>hashAlgIdDecoder);
         
         value test1 = hashAlgDescriptor.decoder([]);
         
-        value mgfSw = AlgorithmIdentifierAnySwitch(map({mgf1Oid->AlgorithmIdentifierDecoder(Descriptor(hashSw.selectDecoder))}));
-        value mgfAlgIdDecoder = AlgorithmIdentifierDecoder(Descriptor(mgfSw.selectDecoder));
+        value mgfSw = AlgorithmIdentifierAnySwitch(map({mgf1Oid->AlgorithmIdentifierDecoder(hashSw.selectDecoder)}));
+        value mgfAlgIdDecoder = AlgorithmIdentifierDecoder(mgfSw.selectDecoder);
         value mgfAlgDescriptor = Descriptor((_)=>mgfAlgIdDecoder);
 //        value sw = AlgorithmIdentifierAnySwitch(map({rsaSsaPssOid->RsaSsaParamsDecoder(Descriptor(Tag(0), (y){value vv = hashSw.selectDecoder(y);if (!is DecodingError vv) {
 //                return TaggedValueDecoder(vv);
@@ -326,7 +278,7 @@ shared void xpp()
 // not RsaSsaParamsDecoder<AlgorithmIdentifier<Asn1Value<Anything>>, AlgorithmIdentifier<Asn1Value<Anything>>>!
             value sw = AlgorithmIdentifierAnySwitch(map({rsaSsaPssOid->RsaSsaParamsDecoder<Asn1Value<Anything>, Asn1Value<Anything>>(hashAlgDescriptor,
             mgfAlgDescriptor)}));
-        value sd2 = AlgorithmIdentifierDecoder(Descriptor(sw.selectDecoder, asn1Null()));
+        value sd2 = AlgorithmIdentifierDecoder(sw.selectDecoder);
         value vv = algorithmIdentifier(rsaSsaPssOid, v);
         print(vv.encoded);
         print(vv.asn1String);
@@ -372,9 +324,9 @@ shared void xpp()
     
     
     print("XY");
-    value hashDecoder = AlgorithmIdentifierDecoder(Descriptor((_)=>Asn1NullDecoder()));
+    value hashDecoder = AlgorithmIdentifierDecoder((_)=>Asn1NullDecoder());
     value hashDescr = Descriptor((_)=>hashDecoder);
-    value mgfDecoder = AlgorithmIdentifierDecoder(Descriptor((_)=>AlgorithmIdentifierDecoder(hashDescr)));
+    value mgfDecoder = AlgorithmIdentifierDecoder((_)=>AlgorithmIdentifierDecoder((_)=>hashDecoder));
     value pr = RsaSsaParamsDecoder<Asn1Value<Anything>, Asn1Value<Anything>>(hashDescr, Descriptor((_)=>mgfDecoder));
     
     value xx = pr.decode(v.encoded);
@@ -395,8 +347,7 @@ shared void xpp()
     print(v2[0].asn1String);
 
     value anySwitch = AlgorithmIdentifierAnySwitch(map({rsaSsaPssOid->pr}));
-    value parameterDescriptor = Descriptor(anySwitch.selectDecoder);
-    value decoder = AlgorithmIdentifierDecoder(parameterDescriptor);
+    value decoder = AlgorithmIdentifierDecoder(anySwitch.selectDecoder);
     value v3 = decoder.decode(ai.encoded);
     if (is DecodingError v3) {
         throw AssertionError("``v3.message else ""`` at ``v3.offset``");
@@ -411,7 +362,7 @@ shared void rr()
     value xx = taggedValue(x, Tag(6));
     value vv = xx.encoded;
     
-    value d = AlgorithmIdentifierDecoder(Descriptor((_)=>Asn1NullDecoder(), asn1Null()));
+    value d = AlgorithmIdentifierDecoder((_)=>Asn1NullDecoder());
     value dd = TaggedValueDecoder<AlgorithmIdentifier<>>(Tag(6), d);
     
     value z = d.decode(x.encoded);

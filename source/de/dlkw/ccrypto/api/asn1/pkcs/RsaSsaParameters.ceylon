@@ -11,7 +11,6 @@ import de.dlkw.ccrypto.api.asn1 {
     IdentityInfo,
     EncodingError,
     Asn1Value,
-    GenericAsn1Value,
     DecodingError,
     TaggedValueDecoder,
     Descriptor,
@@ -103,18 +102,13 @@ shared class RsaSsaParamsDecoder<out HP1, out HP2>(hashAlgIdDescriptor, mgfAlgId
         // use let to show type in IDE hover
         (y)
             {
-            Decoder<AlgorithmIdentifier<HP1>?>|DecodingError v1v = hashAlgIdDescriptor.decoder(y);
+            Decoder<AlgorithmIdentifier<HP1>>|DecodingError v1v = hashAlgIdDescriptor.decoder(y);
             if (is Decoder<AlgorithmIdentifier<HP1>> v1v) {
                 return TaggedValueDecoder(Tag(0), v1v);
             }
-            else if (is Decoder<Null> v1v) {
-                value x = v1v;
-                throw AssertionError("what to do?!");
-            }
-            else if (is DecodingError v1v) {
+            else {
                 return v1v;
             }
-            throw AssertionError("cannot reach here");
         }, taggedValue(rsaSsaDefaultHashParameter, Tag(0))), 
         Descriptor<TaggedValue<AlgorithmIdentifier<HP2>>>( 
             (y)
@@ -123,13 +117,9 @@ shared class RsaSsaParamsDecoder<out HP1, out HP2>(hashAlgIdDescriptor, mgfAlgId
                 if (is Decoder<AlgorithmIdentifier<HP2>> vv) {
                     return TaggedValueDecoder(Tag(1), vv);
                 }
-                else if (is Decoder<Null> vv) {
-                    throw AssertionError("what to do?!");
-                }
-                else if (is DecodingError vv) {
+                else {
                     return vv;
                 }
-                throw AssertionError("cannot reach here");
             }, taggedValue(rsaSsaDefaultMgfParameter, Tag(1))),
             Descriptor<TaggedValue<Asn1Integer>>((_)=>TaggedValueDecoder(Tag(2), Asn1IntegerDecoder()), taggedValue(asn1Integer(20), Tag(2))),
             Descriptor<TaggedValue<Asn1Integer>>((_)=>TaggedValueDecoder(Tag(3), Asn1IntegerDecoder()), taggedValue(asn1Integer(1), Tag(3)))

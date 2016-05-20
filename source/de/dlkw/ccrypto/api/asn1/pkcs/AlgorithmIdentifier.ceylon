@@ -13,7 +13,9 @@ import de.dlkw.ccrypto.api.asn1 {
     Decoder,
     SequenceDecoder,
     DecodingError,
-    ObjectIdentifierDecoder
+    ObjectIdentifierDecoder,
+    GenericAsn1Value,
+    AnySwitchRegistry
 }
 
 """
@@ -49,11 +51,11 @@ shared AlgorithmIdentifier<Parameters> algorithmIdentifier<Parameters>(ObjectIde
     return AlgorithmIdentifier<Parameters>.direct(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, [oid, parameters]);
 }
 
-shared class AlgorithmIdentifierDecoder<P>(Descriptor<P> parameterDescriptor, Tag tag = UniversalTag.sequence)
+shared class AlgorithmIdentifierDecoder<P>(<Decoder<P>|DecodingError>(GenericAsn1Value?[]) parameterSelector, Tag tag = UniversalTag.sequence)
         extends Decoder<AlgorithmIdentifier<P>>(tag)
         given P satisfies Asn1Value<Anything>
 {
-    value delegate = SequenceDecoder<[ObjectIdentifier, P?]>([Descriptor<ObjectIdentifier>((_)=>ObjectIdentifierDecoder()), Descriptor<P>(parameterDescriptor.decoder, Option.optional)]);
+    value delegate = SequenceDecoder<[ObjectIdentifier, P?]>([Descriptor<ObjectIdentifier>((_)=>ObjectIdentifierDecoder()), Descriptor<P>(parameterSelector, Option.optional)]);
     
     shared actual [AlgorithmIdentifier<P>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
@@ -68,6 +70,12 @@ shared class AlgorithmIdentifierDecoder<P>(Descriptor<P> parameterDescriptor, Ta
         return [erg, nextPos];
     }
     
+}
+
+shared class AlgorithmIdentifierAnySwitch(Map<ObjectIdentifier, Decoder<Asn1Value<Anything>>> registeredDecoders)
+        extends AnySwitchRegistry(registeredDecoders)
+{
+    shared actual Integer indexOfRelevantDiscriminator() => 0;
 }
 
 

@@ -75,7 +75,7 @@ shared class Option of optional | mandatory
 shared class Descriptor<out Element>(decoder, default = Option.mandatory)
 given Element satisfies GenericAsn1Value
 {
-    shared <Decoder<Element?>|DecodingError>(GenericAsn1Value?[]) decoder;
+    shared <Decoder<Element>|DecodingError>(GenericAsn1Value?[]) decoder;
     shared Element|Option default;
     
     shared actual String string => "descriptor with ``decoder``, default ``default``";
