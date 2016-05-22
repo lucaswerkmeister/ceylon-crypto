@@ -31,7 +31,12 @@ import de.dlkw.ccrypto.api.asn1.pkcs {
     AlgorithmIdentifierDecoder,
     RsaSsaParamsDecoder,
     RsaSsaParameters,
-    AlgorithmIdentifierAnySwitch
+    AlgorithmIdentifierAnySwitch,
+    DigestInfo,
+    digestInfo,
+    sha1AlgId,
+    DigestInfoDecoder,
+    sha256AlgId
 }
 
 
@@ -373,4 +378,22 @@ shared void rr()
         return;
     }
     print(zz[0].asn1String);
+}
+
+shared void exDigestInfo()
+{
+    value di = digestInfo<Asn1Null>(sha1AlgId, [for (i in 1..20) i.byte]);
+    print(hexdump(di.encoded));
+    print(di.asn1String);
+    
+    value hashSw = AlgorithmIdentifierAnySwitch(map({id_sha1->Asn1NullDecoder(), id_sha256->Asn1NullDecoder()}));
+
+    value decoder = DigestInfoDecoder(hashSw.selectDecoder);
+    value decoded = decoder.decode(di.encoded);
+    if (is DecodingError decoded) {
+        print(decoded.message);
+        return;
+    }
+    print(hexdump(decoded[0].encoded));
+    print(decoded[0].asn1String);
 }

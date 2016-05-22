@@ -1,9 +1,10 @@
 shared class Asn1Null extends Asn1Value<Null>
 {
     shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer)
-            extends Asn1Value<Null>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, null)
+            extends Asn1Value<Null>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer)
     {}
 
+    shared actual Null decode() => null;
     shared actual String asn1ValueString => "NULL";
     shared actual Tag defaultTag => UniversalTag.null;
 }
@@ -26,6 +27,6 @@ shared class Asn1NullDecoder(Tag tag = UniversalTag.null)
             return DecodingError(offset - 1, "NULL must have length 0");
         }
 
-        return [Asn1Null(input[identityOctetsOffset .. offset - 1], identityInfo, lengthOctetsOffset, lengthOctetsOffset + 1, false), offset];
+        return [Asn1Null(input[identityOctetsOffset .. offset - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, lengthOctetsOffset - identityOctetsOffset + 1, false), offset];
     }
 }

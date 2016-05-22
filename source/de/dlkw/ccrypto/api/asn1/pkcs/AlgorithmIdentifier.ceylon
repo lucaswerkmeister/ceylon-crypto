@@ -15,7 +15,9 @@ import de.dlkw.ccrypto.api.asn1 {
     DecodingError,
     ObjectIdentifierDecoder,
     GenericAsn1Value,
-    AnySwitchRegistry
+    AnySwitchRegistry,
+    Asn1Null,
+    asn1Null
 }
 
 """
@@ -69,7 +71,6 @@ shared class AlgorithmIdentifierDecoder<P>(<Decoder<P>|DecodingError>(GenericAsn
         value erg = AlgorithmIdentifier<P>.direct(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer, seq.val);
         return [erg, nextPos];
     }
-    
 }
 
 shared class AlgorithmIdentifierAnySwitch(Map<ObjectIdentifier, Decoder<Asn1Value<Anything>>> registeredDecoders)
@@ -87,6 +88,6 @@ shared ObjectIdentifier id_sha256 = objectIdentifier([2, 16, 840, 1, 101, 3, 4, 
 shared ObjectIdentifier rsaSsaPssOid = pkcs1Oid.withTrailing(10);
 shared ObjectIdentifier mgf1Oid = pkcs1Oid.withTrailing(8);
 
-shared AlgorithmIdentifier<> sha1AlgId = algorithmIdentifier(id_sha1, null);
-shared AlgorithmIdentifier<> sha256AlgId = algorithmIdentifier(id_sha256, null);
+shared AlgorithmIdentifier<Asn1Null> sha1AlgId = algorithmIdentifier(id_sha1, asn1Null());
+shared AlgorithmIdentifier<Asn1Null> sha256AlgId = algorithmIdentifier(id_sha256, asn1Null());
 

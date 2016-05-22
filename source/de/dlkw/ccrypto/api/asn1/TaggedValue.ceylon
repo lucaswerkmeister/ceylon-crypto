@@ -44,7 +44,7 @@ shared class TaggedValueDecoder<Type>(Tag tag, Decoder<Type> innerDecoder)
         }
         
         Integer nextPos = offset + length;
-        value int = TaggedValue<Type>(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer, identityInfo.tag, innerValue);
+        value int = TaggedValue<Type>(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer, identityInfo.tag, innerValue);
         return [int, nextPos];
     }
     

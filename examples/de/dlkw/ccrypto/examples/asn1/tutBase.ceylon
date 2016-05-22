@@ -27,6 +27,7 @@ shared void tutNull02()
     }
     print(hexdump(val2[0].encoded));
     print(val2[0].asn1String);
+    print(val2[0].val);
 }
 
 shared void tutNull03()

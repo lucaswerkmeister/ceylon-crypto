@@ -24,7 +24,7 @@ shared class OctetStringDecoder(Tag tag = UniversalTag.octetString)
     shared actual [OctetString, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
         Integer nextPos = offset + length;
-        value os = OctetString(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer);
+        value os = OctetString(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer);
         return [os, nextPos];
     }
 }

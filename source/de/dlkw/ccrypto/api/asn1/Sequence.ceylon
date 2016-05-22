@@ -128,7 +128,7 @@ shared class GenericSequenceDecoder(Tag tag = UniversalTag.sequence)
         
         "FIXME: support empty sequences"
         assert (is [Asn1Value<Anything>+] result = tmpResult); // FIXME
-        value seq = Asn1Sequence<[Asn1Value<Anything>+]>.internal(input[identityOctetsOffset .. startPos - 1], identityInfo, lengthOctetsOffset, contentStart, violatesDer, result);
+        value seq = Asn1Sequence<[Asn1Value<Anything>+]>.internal(input[identityOctetsOffset .. startPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, contentStart- identityOctetsOffset, violatesDer, result);
         return [seq, startPos];
     }
 }
@@ -141,7 +141,6 @@ shared class SequenceDecoder<out Types>(els, Tag tag = UniversalTag.sequence)
     
     shared default actual [Asn1Sequence<Types>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer contentStart, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
-        print("decoding sequence contents from ``input[contentStart...]`` with descr ``els``");
         value defIter = els.iterator();
         
         variable GenericAsn1Value?[] tmpResult = [];
@@ -235,7 +234,7 @@ shared class SequenceDecoder<out Types>(els, Tag tag = UniversalTag.sequence)
             print(`Types`);
             throw AssertionError("Type mismatch error while sequence decoding. Check type parameters of Asn1Sequence and type parameters of the employed Decoders. Note: OPTIONAL values correspond to intersection types with ceylon.language::Null.");
         }
-        value int = Asn1Sequence.internal(input[identityOctetsOffset .. startPos - 1], identityInfo, lengthOctetsOffset, contentStart, violatesDer, result);
+        value int = Asn1Sequence.internal(input[identityOctetsOffset .. startPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, contentStart - identityOctetsOffset, violatesDer, result);
         return [int, startPos];
     }
 }
