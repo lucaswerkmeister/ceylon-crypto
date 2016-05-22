@@ -137,7 +137,7 @@ shared class RsaSsaParamsDecoder<out HP1, out HP2>(hashAlgIdDescriptor, mgfAlgId
         value dec = seq.val;
         //assert (is [TaggedValue<AlgorithmIdentifier<HP1>>, TaggedValue<AlgorithmIdentifier<HP2>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>] dec);
         
-        value erg = RsaSsaParameters<HP1, HP2>(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, contentStart, violatesDer, dec);
+        value erg = RsaSsaParameters<HP1, HP2>(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, contentStart - identityOctetsOffset, violatesDer, dec);
         return [erg, nextPos];
     }
 }

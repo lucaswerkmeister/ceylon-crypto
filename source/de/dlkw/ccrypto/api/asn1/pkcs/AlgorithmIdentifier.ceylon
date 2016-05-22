@@ -68,7 +68,7 @@ shared class AlgorithmIdentifierDecoder<P>(<Decoder<P>|DecodingError>(GenericAsn
         value [seq, nextPos] = x;
         violatesDer ||= seq.violatesDer;
         
-        value erg = AlgorithmIdentifier<P>.direct(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer, seq.val);
+        value erg = AlgorithmIdentifier<P>.direct(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer, seq.val);
         return [erg, nextPos];
     }
 }
