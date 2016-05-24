@@ -43,10 +43,23 @@ shared class RsaExponentPrivateKeyImpl(exponent, modulus)
     shared actual Integer bitLength = calcBitLength(modulus);
 }
 
-shared class RsaCrtPrivateKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
+shared class RsaCrtPrivateKeyImpl(p, q, dP, dQ, qInv)
+        satisfies RsaCrtPrivateKey
+{
+    shared actual Whole p;
+    shared actual Whole q;
+    shared actual Whole dP;
+    shared actual Whole dQ;
+    shared actual Whole qInv;
+
+    shared actual Whole modulus = p * q;
+    shared actual Integer bitLength = calcBitLength(modulus);
+}
+
+shared class Asn1RsaPrivateKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
         extends Asn1Sequence<[Asn1Integer, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole]>.internal(
     encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
-        satisfies RsaCrtPrivateKey
+        satisfies RsaExponentPrivateKey & RsaCrtPrivateKey
 {
     Byte[] encoded;
     IdentityInfo identityInfo;
@@ -57,6 +70,9 @@ shared class RsaCrtPrivateKeyImpl(encoded, identityInfo, lengthOctetsOffset, con
 
     shared actual Whole modulus => valu[1].val;
     shared actual Integer bitLength = calcBitLength(modulus);
+    
+    shared Whole publicExponent => valu[2].val;
+    shared actual Whole exponent => valu[3].val;
 
     shared actual Whole p => valu[4].val;
     shared actual Whole q => valu[5].val;
@@ -65,7 +81,7 @@ shared class RsaCrtPrivateKeyImpl(encoded, identityInfo, lengthOctetsOffset, con
     shared actual Whole qInv => valu[8].val;
 }
 
-shared RsaCrtPrivateKeyImpl rsaCrtPrivateKeyImpl(publicExponent, privateExponent, p, q, dP, dQ, qInv, Tag tag = UniversalTag.sequence)
+shared Asn1RsaPrivateKeyImpl rsaCrtPrivateKeyImpl(publicExponent, privateExponent, p, q, dP, dQ, qInv, Tag tag = UniversalTag.sequence)
 {
     Whole publicExponent;
     Whole privateExponent;
@@ -103,12 +119,12 @@ shared RsaCrtPrivateKeyImpl rsaCrtPrivateKeyImpl(publicExponent, privateExponent
     assert (!is Asn1EncodingError seqEncodingResult);
     
     value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = seqEncodingResult;
-    return RsaCrtPrivateKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false,
+    return Asn1RsaPrivateKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false,
          [aVersion, aModulus, aPublicExponent, aPrivateExponent, aP, aQ, aDP, aDQ, aQInv]);
 }
 
-shared class RsaPrivateKeyDecoder(Tag tag = UniversalTag.sequence)
-        extends Decoder<RsaCrtPrivateKeyImpl>(tag)
+shared class Asn1RsaPrivateKeyDecoder(Tag tag = UniversalTag.sequence)
+        extends Decoder<Asn1RsaPrivateKeyImpl>(tag)
 {
     value delegate = SequenceDecoder<[Asn1Integer, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole]>([
         Descriptor((_)=>Asn1IntegerDecoder()),
@@ -122,7 +138,7 @@ shared class RsaPrivateKeyDecoder(Tag tag = UniversalTag.sequence)
         Descriptor((_)=>Asn1WholeDecoder())
     ]);
     
-    shared actual [RsaCrtPrivateKeyImpl, Integer]|DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, Boolean violatesDer)
+    shared actual [Asn1RsaPrivateKeyImpl, Integer]|DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, Boolean violatesDer)
     {
         value decodingResult = delegate.decodeGivenTagAndLength(input, offset, identityInfo, length, identityOctetsOffset, lengthOctetsOffset, violatesDer);
         if (is DecodingError decodingResult) {
@@ -132,7 +148,7 @@ shared class RsaPrivateKeyDecoder(Tag tag = UniversalTag.sequence)
         if (seq.val[0].val != 0) {
             return DecodingError(offset, "ASN.1 decoding of RSA private key with more than 2 primes not supported.");
         }
-        value result = RsaCrtPrivateKeyImpl(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer, seq.val);
+        value result = Asn1RsaPrivateKeyImpl(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer, seq.val);
         return [result, nextPos];
     }
 }

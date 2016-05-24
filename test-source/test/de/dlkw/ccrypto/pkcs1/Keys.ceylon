@@ -1,27 +1,25 @@
-import ceylon.test {
-    test
+import ceylon.buffer {
+    ByteBuffer
 }
-import de.dlkw.ccrypto.impl {
-    rsaCrtPrivateKeyImpl,
-    RsaPrivateKeyDecoder
+import ceylon.file {
+    home
+}
+import ceylon.io {
+    newOpenFile
 }
 import ceylon.whole {
     Whole,
     wholeNumber
 }
+
 import de.dlkw.ccrypto.api.asn1 {
     DecodingError,
     Asn1WholeDecoder,
     asn1Whole
 }
-import ceylon.io {
-    newOpenFile
-}
-import ceylon.file {
-    home
-}
-import ceylon.buffer {
-    ByteBuffer
+import de.dlkw.ccrypto.impl {
+    rsaCrtPrivateKeyImpl,
+    Asn1RsaPrivateKeyDecoder
 }
 
 shared void test00()
@@ -46,7 +44,7 @@ shared void test01()
     print(k.asn1String);
     print(k.encoded);
     
-    value j = RsaPrivateKeyDecoder().decode(k.encoded);
+    value j = Asn1RsaPrivateKeyDecoder().decode(k.encoded);
     if (is DecodingError j) {
         print(j.message);
         return;
@@ -66,7 +64,7 @@ native("jvm") shared void test02()
         a = buffer.sequence();
     });
     print(a.size);
-    value j = RsaPrivateKeyDecoder().decode(a);
+    value j = Asn1RsaPrivateKeyDecoder().decode(a);
     if (is DecodingError j) {
         print(j.message);
         return;

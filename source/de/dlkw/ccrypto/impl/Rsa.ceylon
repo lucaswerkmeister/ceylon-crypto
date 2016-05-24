@@ -12,17 +12,16 @@ import de.dlkw.ccrypto.api {
     MessageDigester,
     Signer
 }
+import ceylon.language.meta {
+    type
+}
 class Rsa()
 {
     shared Whole rsaSp1(RsaPrivateKey key, Whole message)
     {
         assert (zero <= message < key.modulus);
         
-        switch (key)
-        case (is RsaExponentPrivateKey) {
-            return message.moduloPower(key.exponent, key.modulus);
-        }
-        case (is RsaCrtPrivateKey) {
+        if (is RsaCrtPrivateKey key) {
             value m = message;
             value s1 = m.moduloPower(key.dP, key.p);
             value s2 = m.moduloPower(key.dQ, key.q);
@@ -31,6 +30,12 @@ class Rsa()
             
             value h = ((s1 - s2) * key.qInv).modulo(key.p);
             return s2 + key.q * h;
+        }
+        else if (is RsaExponentPrivateKey key) {
+            return message.moduloPower(key.exponent, key.modulus);
+        }
+        else {
+            throw AssertionError("unknown RSA private key type ``type(key)``");
         }
     }
     
