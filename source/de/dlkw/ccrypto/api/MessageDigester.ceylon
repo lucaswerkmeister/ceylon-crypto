@@ -1,4 +1,4 @@
-import de.dlkw.ccrypto.api.asn1 {
+import de.dlkw.ccrypto.asn1 {
     Asn1Value,
     asn1Null,
     ObjectIdentifier

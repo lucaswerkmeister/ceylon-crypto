@@ -1,7 +1,7 @@
 import de.dlkw.ccrypto.api {
     MessageDigester
 }
-import de.dlkw.ccrypto.api.asn1 {
+import de.dlkw.ccrypto.asn1 {
     Asn1Sequence,
     OctetString,
     octetString,

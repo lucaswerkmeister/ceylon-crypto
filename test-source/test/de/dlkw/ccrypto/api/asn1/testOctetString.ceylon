@@ -7,7 +7,7 @@ import ceylon.test {
     fail
 }
 
-import de.dlkw.ccrypto.api.asn1 {
+import de.dlkw.ccrypto.asn1 {
     DecodingError,
     octetString,
     OctetString,
