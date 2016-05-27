@@ -68,6 +68,8 @@ shared class UniversalTag extends Tag
     shared new null extends tag(5){}
     shared new objectIdentifier extends tag(6){}
     shared new sequence extends tag(16){}
+    shared new ia5String extends tag(22){}
+    shared new generalizedTime extends tag(24){}
 }
 
 "Information from the identity octets according to the BER"

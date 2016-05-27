@@ -1,12 +1,12 @@
 """
    A generic ASN.1 value with the information that can minimally be known without knowledge of its type's ASN.1 definition.
 """
-shared class GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer)
+shared class GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer)
 {
     "The encoded form of the value according to the BER (ASN.1 basic encoding rules).
      The identity octets start at offset 0,
      the length octets start at offset [[lengthOctetsOffset]],
-     and the content octets start at offset [[contentOctetsOffset]]."
+     and the contents octets start at offset [[contentsOctetsOffset]]."
     shared Byte[] encoded;
     
     "Decoded form of the BER identity octetsof this value."
@@ -16,7 +16,7 @@ shared class GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, content
     shared Integer lengthOctetsOffset;
     
     "The start of the content octets in [[encoded]]."
-    shared Integer contentOctetsOffset;
+    shared Integer contentsOctetsOffset;
     
     "Indicates if the BER encoding of this value violates the DER (ASN.1 distinguished encoding rules), that is,
      if it is **not** in canonical form."
@@ -25,13 +25,13 @@ shared class GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, content
     shared Boolean violatesDer;
     
     shared Byte[] identityOctets => encoded[...lengthOctetsOffset];
-    shared Byte[] lengthOctets => encoded[lengthOctetsOffset .. contentOctetsOffset - 1];
-    shared Byte[] contentOctets => encoded[contentOctetsOffset...];
+    shared Byte[] lengthOctets => encoded[lengthOctetsOffset .. contentsOctetsOffset - 1];
+    shared Byte[] contentsOctets => encoded[contentsOctetsOffset...];
     
     shared default String asn1String => "``identityInfo.tag.asn1String`` ``asn1ValueString``";
-    shared default String asn1ValueString => "generic contents ``hexdump(contentOctets)``";
+    shared default String asn1ValueString => "generic contents ``hexdump(contentsOctets)``";
     
-    shared actual default String string => "``identityInfo.tag.asn1String`` ``hexdump(contentOctets)``";
+    shared actual default String string => "``identityInfo.tag.asn1String`` ``hexdump(contentsOctets)``";
 }
 
 "Decodes an ASN.1 value without knowing its type definition."
@@ -53,8 +53,8 @@ shared abstract class Asn1Value<out Value>
 {
     Value? storedValue;
     
-    shared new direct(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Value? val = null)
-            extends GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer)
+    shared new direct(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentsOctetsOffset, Boolean violatesDer, Value? val = null)
+            extends GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer)
     {
         this.storedValue = val;
     }

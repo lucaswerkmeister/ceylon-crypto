@@ -1,10 +1,10 @@
 shared class OctetString extends Asn1Value<Byte[]>
 {
-    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer)
-            extends Asn1Value<Byte[]>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer)
+    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentsOctetsOffset, Boolean violatesDer)
+            extends Asn1Value<Byte[]>.direct(encoded, identityInfo, lengthOctetsOffset,  contentsOctetsOffset, violatesDer)
     {}
 
-    shared actual Byte[] decode() => encoded[contentOctetsOffset...];
+    shared actual Byte[] decode() => encoded[contentsOctetsOffset...];
     shared actual String asn1ValueString => "OCTET STRING ``hexdump(val)``";
     shared actual Tag defaultTag => UniversalTag.octetString;
 }
