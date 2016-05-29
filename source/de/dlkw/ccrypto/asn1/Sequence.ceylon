@@ -2,16 +2,10 @@ import ceylon.language.meta {
     type
 }
 
-"DEFAULT not supported"//aggregation
-shared class Asn1Sequence<out Types> extends Asn1Value<Types>
+shared abstract class Asn1Aggregation<out Types>(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Types _elements)
+        extends Asn1Value<Types>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, _elements)
         given Types satisfies [GenericAsn1Value?+]
 {
-    shared sealed new internal(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Types elements)
-            extends Asn1Value<Types>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, elements)
-    {}
-    
-    shared actual String asn1ValueString => "SEQUENCE { ``" ".join(val.map((x)=>x?.asn1String else "(absent)"))`` }";
-    shared actual Tag defaultTag => UniversalTag.sequence;
     shared Types elements => val;
 }
 

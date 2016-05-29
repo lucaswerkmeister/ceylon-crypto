@@ -1,7 +1,7 @@
 
 
 shared class Asn1Set<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequence<Types>.internal(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Aggregation<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Types satisfies Asn1Value<Anything>[]
 {
     Byte[] encoded;
@@ -13,7 +13,7 @@ shared class Asn1Set<Types>(encoded, identityInfo, lengthOctetsOffset, contentsO
 }
 
 shared class Asn1SetOf<Inner>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequence<Inner[]>.internal(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Aggregation<Inner[]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Inner satisfies Asn1Value<Anything>
 {
     Byte[] encoded;
