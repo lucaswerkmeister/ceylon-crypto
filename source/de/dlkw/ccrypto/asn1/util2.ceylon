@@ -61,15 +61,17 @@ shared class UniversalTag extends Tag
 {
     new tag(Integer tagNumber) extends Tag(tagNumber, TagClass.universal){}
 
-    shared new boolean extends tag(1){}
-    shared new integer extends tag(2){}
-    shared new bitString extends tag(3){}
-    shared new octetString extends tag(4){}
-    shared new null extends tag(5){}
+    shared new boolean          extends tag(1){}
+    shared new integer          extends tag(2){}
+    shared new bitString        extends tag(3){}
+    shared new octetString      extends tag(4){}
+    shared new null             extends tag(5){}
     shared new objectIdentifier extends tag(6){}
-    shared new sequence extends tag(16){}
-    shared new ia5String extends tag(22){}
-    shared new generalizedTime extends tag(24){}
+    shared new sequence         extends tag(16){}
+    shared new set              extends tag(17){}
+    shared new ia5String        extends tag(22){}
+    shared new utcTime          extends tag(23){}
+    shared new generalizedTime  extends tag(24){}
 }
 
 "Information from the identity octets according to the BER"

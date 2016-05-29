@@ -2,7 +2,7 @@ import ceylon.language.meta {
     type
 }
 
-"DEFAULT not supported"
+"DEFAULT not supported"//aggregation
 shared class Asn1Sequence<out Types> extends Asn1Value<Types>
         given Types satisfies [GenericAsn1Value?+]
 {
@@ -16,7 +16,10 @@ shared class Asn1Sequence<out Types> extends Asn1Value<Types>
 }
 
 // FIXME real ugly. Need to ascertain elements and defaults sequence elements are of same Asn1Value
-shared [Byte[], IdentityInfo, Integer, Integer] | EncodingError encodeAsn1Sequence([Asn1Value<Anything>?+] elements, [Asn1Value<Anything> | Option +] defaults, Tag tag)
+"""
+   Returns the encoded octets, the identity octets info, the offset of the length octets in the encoded octets, and the the offset of the contents octets
+"""
+shared [Byte[], IdentityInfo, Integer, Integer] | EncodingError encodeAsn1Sequence(Asn1Value<Anything>?[] elements, <Asn1Value<Anything> | Option>[] defaults, Tag tag)
 {
     value identityInfo = IdentityInfo(tag, true);
     value identityOctets = identityInfo.encoded;

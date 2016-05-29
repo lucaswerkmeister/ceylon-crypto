@@ -28,6 +28,9 @@ shared class GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, content
     shared Byte[] lengthOctets => encoded[lengthOctetsOffset .. contentsOctetsOffset - 1];
     shared Byte[] contentsOctets => encoded[contentsOctetsOffset...];
     
+    "Convenience access to the tag of this value, stored in the [[identityInfo]]."
+    shared Tag tag => identityInfo.tag;
+    
     shared default String asn1String => "``identityInfo.tag.asn1String`` ``asn1ValueString``";
     shared default String asn1ValueString => "generic contents ``hexdump(contentsOctets)``";
     
