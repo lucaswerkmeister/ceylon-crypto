@@ -12,7 +12,7 @@ import de.dlkw.ccrypto.asn1 {
     Tag,
     Option,
     EncodingError,
-    Asn1Sequence,
+    Asn1Sequ,
     SequenceDecoder,
     Asn1Integer,
     Descriptor,
@@ -269,9 +269,9 @@ test
 void decodeSeqSeq()
 {
     value buf = [ #30.byte, #0d.byte, #30.byte, #06.byte, #02.byte, #01.byte, #ff.byte, #02.byte, #01.byte, #01.byte, #30.byte, #03.byte, #02.byte, #01.byte, #02.byte ];
-    value dec = SequenceDecoder<[Asn1Sequence<[Asn1Integer, Asn1Integer]>, Asn1Sequence<[Asn1Integer]>]>([
-        Descriptor<Asn1Sequence<[Asn1Integer, Asn1Integer]>>((_)=>SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>((_)=>Asn1IntegerDecoder()), Descriptor<Asn1Integer>((_)=>Asn1IntegerDecoder())])),
-        Descriptor<Asn1Sequence<[Asn1Integer]>>((_)=>SequenceDecoder<[Asn1Integer]>([Descriptor<Asn1Integer>((_)=>Asn1IntegerDecoder())]))
+    value dec = SequenceDecoder<[Asn1Sequ<[Asn1Integer, Asn1Integer]>, Asn1Sequ<[Asn1Integer]>]>([
+        Descriptor<Asn1Sequ<[Asn1Integer, Asn1Integer]>>((_)=>SequenceDecoder<[Asn1Integer, Asn1Integer]>([Descriptor<Asn1Integer>((_)=>Asn1IntegerDecoder()), Descriptor<Asn1Integer>((_)=>Asn1IntegerDecoder())])),
+        Descriptor<Asn1Sequ<[Asn1Integer]>>((_)=>SequenceDecoder<[Asn1Integer]>([Descriptor<Asn1Integer>((_)=>Asn1IntegerDecoder())]))
     ]);
     value r = dec.decode(buf);
 /*

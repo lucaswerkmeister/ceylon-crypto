@@ -69,6 +69,7 @@ shared class UniversalTag extends Tag
     shared new objectIdentifier extends tag(6){}
     shared new sequence         extends tag(16){}
     shared new set              extends tag(17){}
+    shared new printableString  extends tag(19){}
     shared new ia5String        extends tag(22){}
     shared new utcTime          extends tag(23){}
     shared new generalizedTime  extends tag(24){}

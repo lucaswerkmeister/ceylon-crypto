@@ -21,7 +21,23 @@ shared class GeneralizedTime extends Asn1Value<Instant>
             extends Asn1Value<Instant>.direct(encoded, identityInfo, lengthOctetsOffset,  contentsOctetsOffset, violatesDer, valu)
     {}
     
-    shared actual String asn1ValueString => "\"``val``\"";
+    shared actual String asn1ValueString
+    {
+        value dateTime = val.dateTime(timeZone.utc);
+        value sb = StringBuilder();
+        sb.appendCharacter('"');
+        sb.append(formatInteger(dateTime.year).padLeading(4, '0'))
+            .append(formatInteger(dateTime.month.integer).padLeading(2, '0'))
+            .append(formatInteger(dateTime.day).padLeading(2, '0'))
+            .append(formatInteger(dateTime.hours).padLeading(2, '0'))
+            .append(formatInteger(dateTime.minutes).padLeading(2, '0'))
+            .append(formatInteger(dateTime.seconds).padLeading(2, '0'));
+        if (dateTime.milliseconds > 0) {
+            sb.appendCharacter('.').append(dateTime.milliseconds.string.padLeading(3, '0'));
+        }
+        sb.append("Z\"");
+        return sb.string;
+    }
     shared actual Tag defaultTag => UniversalTag.generalizedTime;
 }
 
@@ -49,6 +65,8 @@ shared GeneralizedTime | EncodingError generalizedTime(Instant instant, Tag tag 
         assert (exists pos);
         stringValue.append(s[0 .. pos]);
     }
+    
+    stringValue.appendCharacter('Z');
 
     List<Byte> encodedString = ascii.encode(stringValue);
 

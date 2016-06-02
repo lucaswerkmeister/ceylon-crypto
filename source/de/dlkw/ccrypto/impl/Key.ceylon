@@ -10,7 +10,6 @@ import de.dlkw.ccrypto.api {
 import de.dlkw.ccrypto.asn1 {
     asn1Integer,
     Asn1Integer,
-    Asn1Sequence,
     Asn1Whole,
     Asn1EncodingError=EncodingError,
     IdentityInfo,
@@ -24,7 +23,8 @@ import de.dlkw.ccrypto.asn1 {
     SequenceDecoder,
     Descriptor,
     Asn1IntegerDecoder,
-    Asn1WholeDecoder
+    Asn1WholeDecoder,
+    Asn1Sequ
 }
 
 shared class RsaPublicKeyImpl(exponent, modulus)
@@ -33,6 +33,38 @@ shared class RsaPublicKeyImpl(exponent, modulus)
     shared actual Whole modulus;
     shared actual Whole exponent;
     shared actual Integer bitLength = calcBitLength(modulus);
+}
+
+shared class Asn1RsaPublicKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, valu)
+        extends Asn1Sequ<[Asn1Whole, Asn1Whole]>(
+    encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, valu)
+        satisfies RsaPublicKey
+{
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentsOctetsOffset;
+    Boolean violatesDer;
+    [Asn1Whole, Asn1Whole] valu;
+    
+    shared actual Whole modulus => valu[0].val;
+    shared actual Whole exponent => valu[1].val;
+    shared actual Integer bitLength = calcBitLength(modulus);
+}
+
+shared Asn1RsaPublicKeyImpl rsaPublicKey(exponent, modulus, Tag tag = UniversalTag.sequence)
+{
+    Whole modulus;
+    Whole exponent;
+    
+    value aModulus = asn1Whole(modulus);
+    value aExponent = asn1Whole(exponent);
+    
+    value enc = encodeAsn1Sequence([aModulus, aExponent], [Option.mandatory, Option.mandatory], tag);
+    assert (!is Asn1EncodingError enc);
+    
+    value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = enc;
+    return Asn1RsaPublicKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, [aModulus, aExponent]);
 }
 
 shared class RsaExponentPrivateKeyImpl(exponent, modulus)
@@ -57,7 +89,7 @@ shared class RsaCrtPrivateKeyImpl(p, q, dP, dQ, qInv)
 }
 
 shared class Asn1RsaPrivateKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
-        extends Asn1Sequence<[Asn1Integer, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole]>.internal(
+        extends Asn1Sequ<[Asn1Integer, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole]>(
     encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
         satisfies RsaExponentPrivateKey & RsaCrtPrivateKey
 {

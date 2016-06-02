@@ -1,5 +1,4 @@
 import de.dlkw.ccrypto.asn1 {
-    Asn1Sequence,
     OctetString,
     IdentityInfo,
     encodeAsn1Sequence,
@@ -14,11 +13,12 @@ import de.dlkw.ccrypto.asn1 {
     Asn1Value,
     Descriptor,
     SequenceDecoder,
-    OctetStringDecoder
+    OctetStringDecoder,
+    Asn1Sequ
 }
 
 shared class DigestInfo<P>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
-        extends Asn1Sequence<[AlgorithmIdentifier<P>, OctetString]>.internal(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
+        extends Asn1Sequ<[AlgorithmIdentifier<P>, OctetString]>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
         given P satisfies Asn1Value<Anything>
 {
     Byte[] encoded;

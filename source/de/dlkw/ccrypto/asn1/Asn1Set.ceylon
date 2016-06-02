@@ -1,8 +1,8 @@
 
 
 shared class Asn1Set<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequence<Types>.internal(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        given Types satisfies Asn1Value<Anything>[]
+        extends Asn1Aggregation<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        given Types satisfies [Asn1Value<Anything>?+]
 {
     Byte[] encoded;
     IdentityInfo identityInfo;
@@ -10,10 +10,13 @@ shared class Asn1Set<Types>(encoded, identityInfo, lengthOctetsOffset, contentsO
     Integer contentsOctetsOffset;
     Boolean violatesDer;
     Types elements;
+
+    shared actual String asn1ValueString => "SET { ``" ".join(val.map((x)=>x?.asn1String else "(absent)"))`` }";
+    shared actual Tag defaultTag => UniversalTag.set;
 }
 
 shared class Asn1SetOf<Inner>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequence<Inner[]>.internal(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Aggregation<Inner[]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Inner satisfies Asn1Value<Anything>
 {
     Byte[] encoded;
@@ -22,10 +25,13 @@ shared class Asn1SetOf<Inner>(encoded, identityInfo, lengthOctetsOffset, content
     Integer contentsOctetsOffset;
     Boolean violatesDer;
     Inner[] elements;
+
+    shared actual String asn1ValueString => "SET { ``" ".join(val.map((x)=>x.asn1String))`` }";
+    shared actual Tag defaultTag => UniversalTag.set;
 }
 
 shared class Asn1Sequ<out Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequence<Types>.internal(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Aggregation<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Types satisfies [GenericAsn1Value?+]
 {
     Byte[] encoded;
@@ -34,10 +40,13 @@ shared class Asn1Sequ<out Types>(encoded, identityInfo, lengthOctetsOffset, cont
     Integer contentsOctetsOffset;
     Boolean violatesDer;
     Types elements;
+
+    shared actual String asn1ValueString => "SEQUENCE { ``" ".join(val.map((x)=>x?.asn1String else "(absent)"))`` }";
+    shared actual Tag defaultTag => UniversalTag.sequence;
 }
 
 shared class Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequence<Inner[]>.internal(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Aggregation<Inner[]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Inner satisfies Asn1Value<Anything>
 {
     Byte[] encoded;
@@ -46,6 +55,9 @@ shared class Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, co
     Integer contentsOctetsOffset;
     Boolean violatesDer;
     Inner[] elements;
+
+    shared actual String asn1ValueString => "SEQUENCE OF { ``" ".join(val.map((x)=>x.asn1String))`` }";
+    shared actual Tag defaultTag => UniversalTag.sequence;
 }
 
 Comparison compareTags(Tag x, Tag y)
@@ -82,14 +94,12 @@ Comparison compareEncoded(Asn1Value<Anything> x, Asn1Value<Anything> y)
     return if (swap) then larger else smaller;
 }
 
-shared Asn1SequenceOf<Inner> | EncodingError asn1SequenceOf<Inner>(Inner[] elements, Tag tag = UniversalTag.set)
+shared Asn1SequenceOf<Inner> asn1SequenceOf<Inner>(Inner[] elements, Tag tag = UniversalTag.set)
         given Inner satisfies Asn1Value<Anything>
 {
     value en = encodeAsn1Sequence(elements, elements.collect((_) => Option.mandatory), tag);
-    if (is EncodingError en) {
-        return en;
-    }
-    
+    assert (!is EncodingError en);
+
     value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = en;
     return Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, elements);
 }

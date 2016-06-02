@@ -5,7 +5,6 @@ import de.dlkw.ccrypto.asn1 {
     encodeAsn1Sequence,
     Tag,
     UniversalTag,
-    Asn1Sequence,
     taggedValue,
     TaggedValue,
     IdentityInfo,
@@ -17,7 +16,8 @@ import de.dlkw.ccrypto.asn1 {
     Decoder,
     Asn1Null,
     SequenceDecoder,
-    Asn1IntegerDecoder
+    Asn1IntegerDecoder,
+    Asn1Sequ
 }
 
 """
@@ -38,18 +38,16 @@ import de.dlkw.ccrypto.asn1 {
    `trailerFieldBC` is a name for 1, the only allowed field (according to PKCS #1).
 """
 shared class RsaSsaParameters<out HashAlgIdParams = Asn1Value<Anything>, out MgfAlgIdParams = Asn1Value<Anything>>
-        extends Asn1Sequence<[TaggedValue<AlgorithmIdentifier<HashAlgIdParams>>, TaggedValue<AlgorithmIdentifier<MgfAlgIdParams>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>]>
+        (encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, violatesDer, val)
+        extends Asn1Sequ<[TaggedValue<AlgorithmIdentifier<HashAlgIdParams>>, TaggedValue<AlgorithmIdentifier<MgfAlgIdParams>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>]>
+        (encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, val)
         given HashAlgIdParams satisfies Asn1Value<Anything>
         given MgfAlgIdParams satisfies Asn1Value<Anything>
 {
-    shared new (encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, violatesDer, val)
-            extends super.internal(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, val)
-    {
-        Byte[] encoded;
-        Boolean violatesDer;
-        [TaggedValue<AlgorithmIdentifier<HashAlgIdParams>>, TaggedValue<AlgorithmIdentifier<MgfAlgIdParams>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>] val;
-    }
-    
+    Byte[] encoded;
+    Boolean violatesDer;
+    [TaggedValue<AlgorithmIdentifier<HashAlgIdParams>>, TaggedValue<AlgorithmIdentifier<MgfAlgIdParams>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>] val;
+
     shared AlgorithmIdentifier<HashAlgIdParams> digestAlgorithmId => val[0].val;
     shared AlgorithmIdentifier<MgfAlgIdParams> mgfAlgorithmId => val[1].val;
     shared Integer saltLength => val[2].val.val;
