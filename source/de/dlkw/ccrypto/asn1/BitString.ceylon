@@ -36,6 +36,7 @@ shared class BitString extends Asn1Value<[Byte[], Integer]>
         return [bytes, numberOfBits];
     }
     
+    // FIXME like '101'B or '3E7'H
     shared actual String asn1ValueString => "BIT STRING \"``bitdump(bytes, unusedBits)``\"";
     shared actual Tag defaultTag => UniversalTag.bitString;
 }

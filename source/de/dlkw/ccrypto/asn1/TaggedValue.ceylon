@@ -11,7 +11,7 @@ shared class TaggedValue<out Type>(Byte[] encoded, IdentityInfo identityInfo, In
 shared TaggedValue<Type> taggedValue<Type>(Type wrapped, Tag tag)
         given Type satisfies GenericAsn1Value
 {
-    value identityInfo = IdentityInfo(tag, false);
+    value identityInfo = IdentityInfo(tag, true);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;
     value encodedLength = encodeLength(wrapped.encoded.size);
@@ -30,6 +30,9 @@ shared class TaggedValueDecoder<Type>(Tag tag, Decoder<Type> innerDecoder)
             return res1;
         }
         value [innerId, innerLengthAndContentStart, violates1] = res1;
+        if (!innerId.constructed) {
+            return DecodingError(identityOctetsOffset, "explicitly tagged value expected, but value is simple type (not structured)");
+        }
         violatesDer ||= violates1;
         
         value res2 = innerDecoder.decodeGivenTag(input, innerLengthAndContentStart, innerId, offset, violatesDer);
