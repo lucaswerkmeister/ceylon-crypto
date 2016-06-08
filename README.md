@@ -13,7 +13,7 @@ Note that IANAC (I am not a cryptologist), so this will surely be flawed in some
 ## Changes
 
 * 2016-06-08 added most things needed ASN.1 to encode and decode X.509 certificates.
-  Supports certificates signed with RSASAA-PSS!
+  Supports certificates signed with RSASSA-PSS!
   Still need support for X.500 names (AttributeValueAssertions with well-known object identifiers).
   Right now, only common name (2.5.4.3), country (2.5.4.6) and organization (2.5.4.10) are supported.
   No specific v3 extensions support yet. Need to implement some standard and well-known types. 
