@@ -144,4 +144,4 @@ shared class RsaSsaParamsDecoder<out HP1, out HP2>(hashAlgIdDescriptor, mgfAlgId
 shared AlgorithmIdentifier<Asn1Null> rsaSsaDefaultHashParameter = algorithmIdentifier(id_sha1, asn1Null());
 
 "The default algorithm identifier for the mask generating function, MGF1 with SHA-1."
-shared AlgorithmIdentifier<AlgorithmIdentifier<Asn1Null>> rsaSsaDefaultMgfParameter = algorithmIdentifier(mgf1Oid, rsaSsaDefaultHashParameter);
+shared AlgorithmIdentifier<AlgorithmIdentifier<Asn1Null>> rsaSsaDefaultMgfParameter = algorithmIdentifier(id_mgf1, rsaSsaDefaultHashParameter);

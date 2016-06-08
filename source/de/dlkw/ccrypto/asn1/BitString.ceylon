@@ -1,17 +1,18 @@
+
 """
    Parameter types are for octet string contents and number of bits.
    The last octet in the octet string contents may contain unused bits.
 """
-shared class BitString extends Asn1Value<[Byte[], Integer]>
+shared class BitString(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, unusedBits)
+        extends Asn1Value<[Byte[], Integer]>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer)
 {
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentOctetsOffset;
+    Boolean violatesDer;
     shared Integer unusedBits;
-    
-    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentsOctetsOffset, Boolean violatesDer, Integer unusedBits)
-            extends Asn1Value<[Byte[], Integer]>.direct(encoded, identityInfo, lengthOctetsOffset,  contentsOctetsOffset, violatesDer)
-    {
-        this.unusedBits = unusedBits;
-    }
-    
+
     shared Byte[] bytes => val[0];
     shared Integer numberOfBits => val[1];
     
@@ -31,7 +32,7 @@ shared class BitString extends Asn1Value<[Byte[], Integer]>
     shared actual [Byte[], Integer] decode()
     {
         value bytes = encoded[contentsOctetsOffset + 1 ...];
-        assert (exists unusedBits = encoded[0]);
+        assert (exists unusedBits = encoded[contentsOctetsOffset]);
         value numberOfBits = bytes.size * 8 - unusedBits.unsigned;
         return [bytes, numberOfBits];
     }
@@ -75,10 +76,13 @@ shared class BitStringDecoder(Tag tag = UniversalTag.bitString)
     {
         Integer nextPos = offset + length;
         
-        value encoded = input[identityOctetsOffset .. nextPos - 1];
-        value firstByte = encoded[0];
+        value contentsOctets = input[offset .. nextPos - 1];
+        value firstByte = contentsOctets[0];
         if (is Null firstByte) {
             return DecodingError(lengthOctetsOffset, "bit string must contain number of unused bits (min. length 1)");
+        }
+        if (length == 1 && firstByte != 0.byte) {
+            return DecodingError(offset, "empty BIT STRING must have 0 unused bits");
         }
         value unusedBits = firstByte.unsigned;
         if (!(0 <= unusedBits < 8)) {

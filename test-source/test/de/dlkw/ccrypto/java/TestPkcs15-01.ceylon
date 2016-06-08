@@ -3,8 +3,9 @@ import ceylon.interop.java {
     javaByteArray,
     toByteArray
 }
-import ceylon.language.meta {
-    type
+import ceylon.random {
+    Random,
+    DefaultRandom
 }
 import ceylon.test {
     test,
@@ -14,17 +15,16 @@ import ceylon.whole {
     parseWhole,
     Whole
 }
-import ceylon.random {
-    Random, DefaultRandom
-}
 
 import de.dlkw.ccrypto.api {
     Signer,
-    RsaPrivateKey,
     KeyPair,
     RsaPublicKey,
     SignatureVerifier,
     RsaCrtPrivateKey
+}
+import de.dlkw.ccrypto.asn1 {
+    hexdump
 }
 import de.dlkw.ccrypto.impl {
     os2ip,
@@ -44,15 +44,12 @@ import java.math {
 import java.security {
     Signature,
     KeyPairGenerator,
-    JKeyPair = KeyPair
+    JKeyPair=KeyPair
 }
 import java.security.interfaces {
     JRSAPrivateCrtKey=RSAPrivateCrtKey,
     JRSAPublicKey=RSAPublicKey,
-    JRSAPrivateKey = RSAPrivateKey
-}
-import de.dlkw.ccrypto.api.asn1old {
-    hexdump
+    JRSAPrivateKey=RSAPrivateKey
 }
 
 Byte[] conv(String s) {

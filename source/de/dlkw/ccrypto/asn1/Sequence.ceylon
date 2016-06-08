@@ -6,7 +6,7 @@ import ceylon.language.meta {
    For SEQUENCE and SET, Types should contain at least one element, for SEQUENCE OF and SET OF, Types may be Empty.
 """
 shared abstract class Asn1Aggregation<out Types>(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Types _elements)
-        extends Asn1Value<Types>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, _elements)
+        extends Asn1Value<Types>(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, _elements)
         given Types satisfies GenericAsn1Value?[]
 {
     shared Types elements => val;
@@ -164,9 +164,8 @@ shared class SequenceDecoder<out Types>(els, Tag tag = UniversalTag.sequence)
                 if (is DecodingError decoder) {
                     throw AssertionError(decoder.message else "");
                 }
-                assert (exists expectedTag = decoder.tag);
 
-                if (l0.tag == expectedTag) {
+                if (decoder.tagMatch(l0.tag)) {
                     value decoded = decoder.decodeGivenTag(input, lengthAndContentStart, l0, startPos, violatesDer);
                     if (is DecodingError decoded) {
                         return decoded;
@@ -191,7 +190,7 @@ shared class SequenceDecoder<out Types>(els, Tag tag = UniversalTag.sequence)
                     if (is Option default) {
                         switch (default)
                         case (Option.mandatory) {
-                            return DecodingError(startPos, "unexpected tag ``l0.tag`` in sequence, expected ``expectedTag``");
+                            return DecodingError(startPos, "unexpected tag ``l0.tag`` in sequence, expected ``decoder.tag else "(cannot happen)"``");
                         }
                         case (Option.optional) {
                             tmpResult = tmpResult.withTrailing(null);

@@ -1,7 +1,15 @@
+import ceylon.time {
+    Instant
+}
 shared class UTCTime(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentsOctetsOffset, Boolean violatesDer)
-         extends GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset,  contentsOctetsOffset, violatesDer)
+         extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset,  contentsOctetsOffset, violatesDer)
 {
-    // not implemented
+    shared Instant instant(Instant turnover)
+    {
+        return nothing;
+    }
+    
+    shared actual Tag defaultTag = UniversalTag.utcTime;
 }
 
 shared class UTCTimeDecoder(Tag tag = UniversalTag.utcTime)

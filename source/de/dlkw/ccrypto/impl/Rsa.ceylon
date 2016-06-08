@@ -10,10 +10,17 @@ import de.dlkw.ccrypto.api {
     RsaExponentPrivateKey,
     RsaCrtPrivateKey,
     MessageDigester,
-    Signer
+    Signer,
+    PublicKey
 }
 import ceylon.language.meta {
     type
+}
+import de.dlkw.ccrypto.api.asn1.pkcs {
+    AlgorithmIdentifier,
+    rsaEncryptionAlgId,
+    sha1WithRsaAlgId,
+    sha256WithRsaAlgId
 }
 class Rsa()
 {
@@ -201,3 +208,16 @@ shared RsaSsaPkcs15Sign sha256WithRsaSigner(RsaPrivateKey key)
 
 shared RsaSsaPkcs15Verify sha256WithRsaVerifier(RsaPublicKey key)
         => RsaSsaPkcs15Verify(key, Sha256());
+
+shared SignatureVerifier? signatureVerifierFromAlgorithmId(AlgorithmIdentifier<> algorithmIdentifier, PublicKey key)
+{
+    if (algorithmIdentifier == sha1WithRsaAlgId) {
+        assert (is RsaPublicKey key);
+        return sha1WithRsaVerifier(key);
+    }
+    if (algorithmIdentifier == sha256WithRsaAlgId) {
+        assert (is RsaPublicKey key);
+        return sha256WithRsaVerifier(key);
+    }
+    return null;
+}

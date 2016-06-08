@@ -1,14 +1,19 @@
-shared class Asn1Boolean extends Asn1Value<Boolean>
+
+shared class Asn1Boolean(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
+        extends Asn1Value<Boolean>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
-    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Boolean valu)
-            extends Asn1Value<Boolean>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, valu)
-    {}
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentOctetsOffset;
+    Boolean violatesDer;
+    Boolean valu;
 
     shared actual String asn1ValueString => if (val) then "TRUE" else "FALSE";
     shared actual Tag defaultTag => UniversalTag.boolean;
 }
 
-shared Asn1Boolean asn1Boolean(Boolean val, Tag tag = UniversalTag.null)
+shared Asn1Boolean asn1Boolean(Boolean val, Tag tag = UniversalTag.boolean)
 {
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;

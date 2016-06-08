@@ -1,12 +1,22 @@
-shared class Asn1Null extends Asn1Value<Null>
+shared class Asn1Null(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer)
+         extends Asn1Value<Null>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer)
 {
-    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer)
-            extends Asn1Value<Null>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer)
-    {}
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentOctetsOffset;
+    Boolean violatesDer;
 
     shared actual Null decode() => null;
     shared actual String asn1ValueString => "NULL";
     shared actual Tag defaultTag => UniversalTag.null;
+    
+    shared actual Boolean equals(Object other)
+    {
+        return other is Asn1Null;
+    }
+    
+    shared actual Integer hash => 0;
 }
 
 shared Asn1Null asn1Null(Tag tag = UniversalTag.null)

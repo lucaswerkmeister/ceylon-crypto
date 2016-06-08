@@ -237,6 +237,14 @@ shared [Byte+] encodeLength(variable Integer length)
 shared abstract class Decoder<out Asn1Type>("The (IMPLICIT) tag that must be present in the encoding, or null if any tag should be accepted." shared Tag? tag)
         given Asn1Type satisfies GenericAsn1Value
 {
+    shared Boolean tagMatch(Tag otherTag)
+    {
+        if (exists tag) {
+            return otherTag == tag;
+        }
+        return true;
+    }
+    
     "Decodes an ASN.1 value, returning the value and the offset of the next ASN.1 value in [[input]]."
     shared [Asn1Type, Integer] | DecodingError decode("The input to decode. Must be encoded according to the BER." Byte[] input,
         "The offset in [[input]] of the start of the ASN.1 value to decode---the first (or only) identity octet." Integer offset = 0)
@@ -250,10 +258,8 @@ shared abstract class Decoder<out Asn1Type>("The (IMPLICIT) tag that must be pre
         value [identityOctets, lengthAndContentStart, violates0] = res0;
         violatesDer ||= violates0;
         
-        if (exists tag) {
-            if (identityOctets.tag != tag) {
-                return DecodingError(offset, "expected tag ``tag`` but got ``identityOctets.tag``.");
-            }
+        if (!tagMatch(identityOctets.tag)) {
+            return DecodingError(offset, "expected tag ``tag else "(cannot happen)"`` but got ``identityOctets.tag``.");
         }
         
         return decodeGivenTag(input, lengthAndContentStart, identityOctets, offset, violatesDer);
@@ -290,7 +296,9 @@ shared abstract class Decoder<out Asn1Type>("The (IMPLICIT) tag that must be pre
         "The input to decode. Must be encoded according to the BER."
         Byte[] input,
         
-        "The offset in [[input]] of the first (or only) length octet."
+        "The offset in [[input]] of the first (or only) contents octet.
+         If there are no contents octets (like in NULL), this is the offset of the first byte
+         after the ASN.1 value."
         Integer offset,
         
         "The already decoded identity octets of the ASN.1 value to decode."
@@ -299,12 +307,45 @@ shared abstract class Decoder<out Asn1Type>("The (IMPLICIT) tag that must be pre
         "The already decoded length octets of the ASN.1 value to decode."
         Integer length,
         
-        "The offset in [[input]] of the start of this ASN.1 value. Must lie before [[offset]]." Integer identityOctetsOffset,
+        "The offset in [[input]] of the start of this ASN.1 value. Must lie before [[offset]]."
+        Integer identityOctetsOffset,
+
+        "The offset in [[input]] of the first (or only) length octet. Must lie before [[offset]] and after [[identityOctetsOffset]]."
         Integer lengthOctetsOffset,
         
         "Indicates if the decoding of the identity and length octets of the ASN.1 value to decode violated the DER."
         Boolean violatesDer
     );
+}
+
+// TODO not finished yet!
+shared abstract class StdDecoder<Asn1Type>(Tag tag)
+        extends Decoder<Asn1Type>(tag)
+        given Asn1Type satisfies Asn1Value<Anything>
+{
+    shared actual [Asn1Type, Integer] | DecodingError decodeGivenTagAndLength(input, offset, identityInfo, length, identityOctetsOffset, lengthOctetsOffset, violatesDer)
+    {
+        Byte[] input;
+        Integer offset;
+        IdentityInfo identityInfo;
+        Integer length;
+        Integer identityOctetsOffset;
+        Integer lengthOctetsOffset;
+        Boolean violatesDer;
+
+        Integer nextPos = offset + length;
+        
+        value encoded = input[identityOctetsOffset .. nextPos - 1];
+        
+        value decoded = decodeContents(encoded);
+        if (is DecodingError decoded) {
+            return decoded;
+        }
+
+        return [decoded, nextPos];
+    }
+    
+    shared formal Asn1Type | DecodingError decodeContents(Byte[] contents);
 }
 
 shared String hexdigits(Byte b) => formatInteger(b.unsigned, 16).padLeading(2, '0');

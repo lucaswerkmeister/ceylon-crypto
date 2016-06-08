@@ -5,12 +5,19 @@ import ceylon.buffer.codec {
     EncodeException,
     DecodeException
 }
+import ceylon.whole {
+    Whole
+}
 
-shared class PrintableString extends Asn1Value<String>
+shared class PrintableString(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
+         extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
-    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentsOctetsOffset, Boolean violatesDer, String valu)
-            extends Asn1Value<String>.direct(encoded, identityInfo, lengthOctetsOffset,  contentsOctetsOffset, violatesDer, valu)
-    {}
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentOctetsOffset;
+    Boolean violatesDer;
+    String valu;
     
     shared actual String asn1ValueString => "\"``val``\"";
     shared actual Tag defaultTag => UniversalTag.printableString;
@@ -48,7 +55,7 @@ shared class PrintableStringDecoder(Tag tag = UniversalTag.printableString)
         Integer nextPos = offset + length;
         
         value contentsOctets = input[offset : length];
-        if (contentsOctets.size != length) {
+        if (contentsOctets.shorterThan(length)) {
             return DecodingError(offset + contentsOctets.size, "reached end of input");
         }
         

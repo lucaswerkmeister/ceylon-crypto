@@ -1,3 +1,19 @@
+import de.dlkw.ccrypto.api.asn1.pkcs {
+    AlgorithmIdentifier,
+    id_sha256,
+    id_rsaSsaPss,
+    algorithmIdentifier,
+    id_mgf1,
+    id_sha1,
+    rsaSsaParams,
+    AlgorithmIdentifierDecoder,
+    RsaSsaParamsDecoder,
+    RsaSsaParameters,
+    AlgorithmIdentifierAnySwitch,
+    digestInfo,
+    sha1AlgIdExplicitParam,
+    DigestInfoDecoder
+}
 import de.dlkw.ccrypto.asn1 {
     ObjectIdentifier,
     Asn1Value,
@@ -10,7 +26,6 @@ import de.dlkw.ccrypto.asn1 {
     hexdump,
     objectIdentifier,
     Tag,
-    Asn1Sequence,
     taggedValue,
     GenericAsn1Value,
     TaggedValueDecoder,
@@ -18,25 +33,8 @@ import de.dlkw.ccrypto.asn1 {
     GenericAsn1ValueDecoder,
     ObjectIdentifierDecoder,
     Asn1IntegerDecoder,
-    asn1Integer
-}
-import de.dlkw.ccrypto.api.asn1.pkcs {
-    AlgorithmIdentifier,
-    id_sha256,
-    rsaSsaPssOid,
-    algorithmIdentifier,
-    mgf1Oid,
-    id_sha1,
-    rsaSsaParams,
-    AlgorithmIdentifierDecoder,
-    RsaSsaParamsDecoder,
-    RsaSsaParameters,
-    AlgorithmIdentifierAnySwitch,
-    DigestInfo,
-    digestInfo,
-    sha1AlgId,
-    DigestInfoDecoder,
-    sha256AlgId
+    asn1Integer,
+    Asn1Sequ
 }
 
 
@@ -111,9 +109,9 @@ shared void creAlgIdRsaSsaPssSha256()
 {
     value sha256AlgId = algorithmIdentifier(id_sha256, asn1Null());
     
-    value mgf1Sha256AlgId = algorithmIdentifier(mgf1Oid, sha256AlgId);
+    value mgf1Sha256AlgId = algorithmIdentifier(id_mgf1, sha256AlgId);
     
-    value algId = algorithmIdentifier(rsaSsaPssOid, rsaSsaParams(sha256AlgId, mgf1Sha256AlgId, 32, 1));
+    value algId = algorithmIdentifier(id_rsaSsaPss, rsaSsaParams(sha256AlgId, mgf1Sha256AlgId, 32, 1));
     
     print(algId.asn1String);
     print(hexdump(algId.encoded));
@@ -169,7 +167,7 @@ shared class RsaSsaParamsDecoder<HP1, HP2>(hashAlgIdDescriptor, mgfAlgIdDescript
 shared void xpp()
 {
     value v = rsaSsaParams<Asn1Null, AlgorithmIdentifier<Asn1Null>>(algorithmIdentifier<Asn1Null>(id_sha256, asn1Null()),
-                                               algorithmIdentifier<AlgorithmIdentifier<Asn1Null>>(mgf1Oid, algorithmIdentifier<Asn1Null>(id_sha256, null)),
+                                               algorithmIdentifier<AlgorithmIdentifier<Asn1Null>>(id_mgf1, algorithmIdentifier<Asn1Null>(id_sha256, null)),
                                            32, 1);
     print(v.encoded);
     print(v.asn1String);
@@ -208,7 +206,7 @@ shared void xpp()
         value sd1 = SequenceDecoder<GenericAsn1Value[4]>(
             [Descriptor((_)=>TaggedValueDecoder(Tag(0), SequenceDecoder<[ObjectIdentifier, Asn1Value<Anything>]>([Descriptor((_)=>ObjectIdentifierDecoder()), Descriptor((_)=>Asn1NullDecoder(), asn1Null())]))),
             Descriptor((_)=>TaggedValueDecoder(Tag(1),
-                SequenceDecoder<[ObjectIdentifier, Asn1Sequence<[ObjectIdentifier, Asn1Value<Anything>]>]>(
+                SequenceDecoder<[ObjectIdentifier, Asn1Sequ<[ObjectIdentifier, Asn1Value<Anything>]>]>(
                     [Descriptor((_)=>ObjectIdentifierDecoder()),
                      Descriptor((_)=>SequenceDecoder<[ObjectIdentifier, Asn1Value<Anything>]>(
                          [Descriptor((_)=>ObjectIdentifierDecoder()),
@@ -269,7 +267,7 @@ shared void xpp()
         
         value test1 = hashAlgDescriptor.decoder([]);
         
-        value mgfSw = AlgorithmIdentifierAnySwitch(map({mgf1Oid->AlgorithmIdentifierDecoder(hashSw.selectDecoder)}));
+        value mgfSw = AlgorithmIdentifierAnySwitch(map({id_mgf1->AlgorithmIdentifierDecoder(hashSw.selectDecoder)}));
         value mgfAlgIdDecoder = AlgorithmIdentifierDecoder(mgfSw.selectDecoder);
         value mgfAlgDescriptor = Descriptor((_)=>mgfAlgIdDecoder);
 //        value sw = AlgorithmIdentifierAnySwitch(map({rsaSsaPssOid->RsaSsaParamsDecoder(Descriptor(Tag(0), (y){value vv = hashSw.selectDecoder(y);if (!is DecodingError vv) {
@@ -281,10 +279,10 @@ shared void xpp()
 // here, the type inferral does not yield the desired result:
 // we need RsaSsaParamsDecoder<Asn1Value<Anything>, out Asn1Value<Anything>>,
 // not RsaSsaParamsDecoder<AlgorithmIdentifier<Asn1Value<Anything>>, AlgorithmIdentifier<Asn1Value<Anything>>>!
-            value sw = AlgorithmIdentifierAnySwitch(map({rsaSsaPssOid->RsaSsaParamsDecoder<Asn1Value<Anything>, Asn1Value<Anything>>(hashAlgDescriptor,
+            value sw = AlgorithmIdentifierAnySwitch(map({id_rsaSsaPss->RsaSsaParamsDecoder<Asn1Value<Anything>, Asn1Value<Anything>>(hashAlgDescriptor,
             mgfAlgDescriptor)}));
         value sd2 = AlgorithmIdentifierDecoder(sw.selectDecoder);
-        value vv = algorithmIdentifier(rsaSsaPssOid, v);
+        value vv = algorithmIdentifier(id_rsaSsaPss, v);
         print(vv.encoded);
         print(vv.asn1String);
         value xx = sd2.decode(vv.encoded);
@@ -294,7 +292,7 @@ shared void xpp()
         }
         value [sigAlgId, nextPos] = xx;
         
-        if (sigAlgId.objectIdentifier == rsaSsaPssOid) {
+        if (sigAlgId.objectIdentifier == id_rsaSsaPss) {
             print("using RSASSA-PSS signature");
             assert (is RsaSsaParameters<Asn1Value<Anything>, Asn1Value<Anything>> params = sigAlgId.parameters);
             if (params.digestAlgorithmId.objectIdentifier == id_sha1) {
@@ -304,7 +302,7 @@ shared void xpp()
                 print("using SHA-256 as digest");
             }
             
-            if (params.mgfAlgorithmId.objectIdentifier == mgf1Oid) {
+            if (params.mgfAlgorithmId.objectIdentifier == id_mgf1) {
                 assert (is AlgorithmIdentifier<> mgf1Hash = params.mgfAlgorithmId.parameters); 
                 if (mgf1Hash.objectIdentifier == id_sha1) {
                     print("using SHA-1 as digest in MGF1");
@@ -342,7 +340,7 @@ shared void xpp()
     print(xx[0].encoded);
     print(xx[0].asn1String);
     
-    value ai = algorithmIdentifier(rsaSsaPssOid, v);
+    value ai = algorithmIdentifier(id_rsaSsaPss, v);
     print(ai.encoded);
     print(ai.asn1String);
     
@@ -351,7 +349,7 @@ shared void xpp()
     print(v2[0].encoded);
     print(v2[0].asn1String);
 
-    value anySwitch = AlgorithmIdentifierAnySwitch(map({rsaSsaPssOid->pr}));
+    value anySwitch = AlgorithmIdentifierAnySwitch(map({id_rsaSsaPss->pr}));
     value decoder = AlgorithmIdentifierDecoder(anySwitch.selectDecoder);
     value v3 = decoder.decode(ai.encoded);
     if (is DecodingError v3) {
@@ -382,7 +380,7 @@ shared void rr()
 
 shared void exDigestInfo()
 {
-    value di = digestInfo<Asn1Null>(sha1AlgId, [for (i in 1..20) i.byte]);
+    value di = digestInfo<Asn1Null>(sha1AlgIdExplicitParam, [for (i in 1..20) i.byte]);
     print(hexdump(di.encoded));
     print(di.asn1String);
     

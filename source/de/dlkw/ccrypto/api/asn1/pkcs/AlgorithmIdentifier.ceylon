@@ -17,8 +17,7 @@ import de.dlkw.ccrypto.asn1 {
     AnySwitchRegistry,
     Asn1Null,
     asn1Null,
-    Asn1Sequ,
-    asn1Integer
+    Asn1Sequ
 }
 
 """
@@ -39,6 +38,25 @@ shared class AlgorithmIdentifier<out Parameters = Asn1Value<Anything>>(Byte[] en
 {
     shared ObjectIdentifier objectIdentifier => val[0];
     shared Parameters? parameters => val[1];
+    
+    shared actual Boolean equals(Object other)
+    {
+        if (!is AlgorithmIdentifier<Parameters> other) {
+            return false;
+        }
+        if (objectIdentifier != other.objectIdentifier) {
+            return false;
+        }
+        value p0 = parameters;
+        value p1 = other.parameters;
+        if (is Null p0) {
+            return p1 is Null;
+        }
+        if (is Null p1) {
+            return false;
+        }
+        return p0 == p1;
+    }
 }
 
 shared AlgorithmIdentifier<Parameters> algorithmIdentifier<Parameters>(ObjectIdentifier oid, Parameters? parameters, Tag tag = UniversalTag.sequence)
@@ -76,23 +94,60 @@ shared class AlgorithmIdentifierAnySwitch(Map<ObjectIdentifier, Decoder<Asn1Valu
     shared actual Integer indexOfRelevantDiscriminator() => 0;
 }
 
+/////////////////////////////////
+// Object identifiers, well-known
+/////////////////////////////////
 
+// prefixes
+
+ObjectIdentifier id_pkcs1 = objectIdentifier([1, 2, 840, 113549, 1, 1]);
+ObjectIdentifier id_nistalgorithm = objectIdentifier([2, 16, 840, 1, 101, 3, 4]);
+ObjectIdentifier id_nist_hashalgs = id_nistalgorithm.withTrailing(2);
+
+// digest methods (hashes)
+
+"Object identifier for the SHA-1 message digest"
 shared ObjectIdentifier id_sha1 = objectIdentifier([1, 3, 14, 3, 2, 26]);
 
-ObjectIdentifier pkcs1Oid = objectIdentifier([1, 2, 840, 113549, 1, 1]);
-shared ObjectIdentifier id_sha256 = objectIdentifier([2, 16, 840, 1, 101, 3, 4, 2, 1]);
+"Object identifier for the SHA-256 message digest"
+shared ObjectIdentifier id_sha256 = id_nist_hashalgs.withTrailing(1);
 
-shared ObjectIdentifier id_sha1WithRsaEncryption = pkcs1Oid.withTrailing(5);
+"Object identifier describing an RSA key"
+shared ObjectIdentifier id_rsaEncryption = id_pkcs1.withTrailing(1);
 
-shared ObjectIdentifier rsaSsaPssOid = pkcs1Oid.withTrailing(10);
-shared ObjectIdentifier mgf1Oid = pkcs1Oid.withTrailing(8);
+"Object identifier describing RSA signature according to PKCS #1, RSASSA-PKCS1-v1_5, using SHA-1 in EMSA-PKCS1-v1_5"
+shared ObjectIdentifier id_sha1WithRsaEncryption = id_pkcs1.withTrailing(5);
 
-shared AlgorithmIdentifier<Asn1Null> sha1AlgId = algorithmIdentifier(id_sha1, asn1Null());
-shared AlgorithmIdentifier<Asn1Null> sha256AlgId = algorithmIdentifier(id_sha256, asn1Null());
+"Object identifier describing RSA signature according to PKCS #1, RSASSA-PKCS1-v1_5, using SHA-256 in EMSA-PKCS1-v1_5"
+shared ObjectIdentifier id_sha256WithRsaEncryption = id_pkcs1.withTrailing(11);
 
-shared AlgorithmIdentifier<Asn1Null> sha1WithRsa =
-        algorithmIdentifier(id_sha1WithRsaEncryption, asn1Null());
+"Object identifier describing the mask generating function MGF1"
+shared ObjectIdentifier id_mgf1 = id_pkcs1.withTrailing(8);
 
+"Object identifier describing RSA signature according to PKCS #1, RSASSA-PSS"
+shared ObjectIdentifier id_rsaSsaPss = id_pkcs1.withTrailing(10);
+
+// Algorithm identifiers, well-known
+
+"Algorithm identifier describing the SHA-1 message digest"
+shared AlgorithmIdentifier<Asn1Null> sha1AlgId = algorithmIdentifier(id_sha1, null);
+"Algorithm identifier describing the SHA-1 message digest. Contains an explicit NULL parameter, to be used
+ in [[DigestInfo]] (for stupid reasons). Use [[sha1AlgId]] anywhere else."
+shared AlgorithmIdentifier<Asn1Null> sha1AlgIdExplicitParam = algorithmIdentifier(id_sha1, asn1Null());
+"Algorithm identifier describing the SHA-256 message digest"
+shared AlgorithmIdentifier<Asn1Null> sha256AlgId = algorithmIdentifier(id_sha256, null);
+"Algorithm identifier describing the SHA-256 message digest. Contains an explicit NULL parameter, to be used
+ in [[DigestInfo]] (for stupid reasons). Use [[sha1AlgId]] anywhere else."
+shared AlgorithmIdentifier<Asn1Null> sha256AlgIdExplicitParam = algorithmIdentifier(id_sha256, asn1Null());
+
+shared AlgorithmIdentifier<Asn1Null> rsaEncryptionAlgId = algorithmIdentifier(id_rsaEncryption, asn1Null());
+
+shared AlgorithmIdentifier<Asn1Null> sha1WithRsaAlgId = algorithmIdentifier(id_sha1WithRsaEncryption, asn1Null());
+shared AlgorithmIdentifier<Asn1Null> sha256WithRsaAlgId = algorithmIdentifier(id_sha256WithRsaEncryption, asn1Null());
+
+
+shared AlgorithmIdentifier<RsaSsaParameters<Asn1Null, AlgorithmIdentifier<Asn1Null>>> sha1WithRsaSsaPssAndMgf1Sha1 =
+        algorithmIdentifier(id_rsaSsaPss, rsaSsaParams(sha1AlgId, algorithmIdentifier(id_mgf1, sha1AlgId), 20));
 shared AlgorithmIdentifier<RsaSsaParameters<Asn1Null, AlgorithmIdentifier<Asn1Null>>> sha256WithRsaSsaPssAndMgf1Sha256 =
-        algorithmIdentifier(rsaSsaPssOid, rsaSsaParams(sha256AlgId, algorithmIdentifier(mgf1Oid, sha256AlgId), 32));
+        algorithmIdentifier(id_rsaSsaPss, rsaSsaParams(sha256AlgId, algorithmIdentifier(id_mgf1, sha256AlgId), 32));
 

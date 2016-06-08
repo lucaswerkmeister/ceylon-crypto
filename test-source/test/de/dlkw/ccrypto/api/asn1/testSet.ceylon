@@ -25,13 +25,14 @@ void testSetOf01()
     print(s1.encoded);
     print(s1.asn1String);
     
-    value s2 = SetOfDecoder(Asn1IntegerDecoder()).decode(s1.encoded);
+    value s2 = SetOfDecoder(Asn1IntegerDecoder()).decode(s1.encoded.withLeading(224.byte), 1);
     if (is DecodingError s2) {
         fail(s2.message);
         return;
     }
     print(s2[0].encoded);
     print(s2[0].asn1String);
+    assert (s2[1] == 15);
 }
 
 test

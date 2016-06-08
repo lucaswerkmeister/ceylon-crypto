@@ -5,10 +5,7 @@ import ceylon.test {
 import de.dlkw.ccrypto.asn1 {
     asn1Integer,
     Tag,
-    TagClass,
-    taggedValue
-}
-import de.dlkw.ccrypto.api.asn1old {
+    taggedValue,
     hexdump
 }
 

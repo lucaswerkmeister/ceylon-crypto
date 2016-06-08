@@ -1,9 +1,14 @@
-shared class Asn1Integer extends Asn1Value<Integer>
+
+shared class Asn1Integer(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
+        extends Asn1Value<Integer>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
-    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Integer valu)
-            extends Asn1Value<Integer>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, valu)
-    {}
-    
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentOctetsOffset;
+    Boolean violatesDer;
+    Integer valu;
+
     shared actual String asn1ValueString => "INTEGER ``val``";
     shared actual Tag defaultTag => UniversalTag.integer;
     

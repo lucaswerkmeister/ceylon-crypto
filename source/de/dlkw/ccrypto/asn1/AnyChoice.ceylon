@@ -44,3 +44,25 @@ shared abstract class AnySwitchRegistry(Map<ObjectIdentifier, Decoder<Asn1Value<
         return registeredDecoders.get(discriminator);
     }
 }
+
+shared class ChoiceDecoder<P>(decoders)
+        extends Decoder<P>(null)
+        given P satisfies Asn1Value<Anything>
+{
+    Decoder<P>[] decoders;
+    for (decoder in decoders) {
+        assert (exists x = decoder.tag);
+    }
+    
+    shared actual [P, Integer]|DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, Boolean violatesDer)
+    {
+        for (decoder in decoders) {
+            if (decoder.tagMatch(identityInfo.tag)) {
+                return decoder.decodeGivenTagAndLength(input, offset, identityInfo, length, identityOctetsOffset, lengthOctetsOffset, violatesDer);
+            }
+        }
+        else {
+            return (DecodingError(offset, "no matching tag found for CHOICE"));
+        }
+    }
+}

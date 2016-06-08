@@ -1,8 +1,13 @@
-shared class ObjectIdentifier extends Asn1Value<[Integer*]>
+
+shared class ObjectIdentifier(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
+         extends Asn1Value<[Integer*]>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
-    shared new internal(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Integer[] valu)
-            extends Asn1Value<Integer[]>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, valu)
-    {}
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentOctetsOffset;
+    Boolean violatesDer;
+    Integer[] valu;
 
     shared actual String asn1ValueString => "OBJECT IDENTIFIER ``".".join(val.map((x) => x.string))``";
     shared actual String string => ".".join(val.map((x) => x.string));
@@ -55,7 +60,7 @@ shared ObjectIdentifier objectIdentifier([Integer*] parts, Tag tag = UniversalTa
     }
     
     value encodedLength = encodeLength(encoded.size);
-    return ObjectIdentifier.internal(identityOctets.chain(encodedLength).chain(encoded).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, parts);
+    return ObjectIdentifier(identityOctets.chain(encodedLength).chain(encoded).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, parts);
 }
 
 shared class ObjectIdentifierDecoder(Tag tag = UniversalTag.objectIdentifier)
@@ -106,7 +111,7 @@ shared class ObjectIdentifierDecoder(Tag tag = UniversalTag.objectIdentifier)
             return DecodingError(nextPos, "OID content longer than indicated by length octets (last byte has bit 7 set)");
         }
 
-        value oid = ObjectIdentifier.internal(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer, result);
+        value oid = ObjectIdentifier(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer, result);
         return [oid, nextPos];
     }
 }

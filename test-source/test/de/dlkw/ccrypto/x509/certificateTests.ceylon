@@ -1,38 +1,25 @@
-import ceylon.test {
-    test
-}
 import ceylon.file {
     home,
     Nil,
     File,
-    Writer
+    Writer,
+    Reader
 }
-import ceylon.time.timezone {
-    timeZone
-}
-import de.dlkw.ccrypto.impl {
-    rsaPublicKey,
-    os2ip,
-    sha256WithRsaAndMgf1Sha256Signer,
-    rsaCrtPrivateKeyImpl,
-    sha1WithRsaSigner
+import ceylon.test {
+    test,
+    fail
 }
 import ceylon.time.iso8601 {
     parseDateTime
 }
-import de.dlkw.ccrypto.api.asn1.pkcs {
-    sha256WithRsaSsaPssAndMgf1Sha256,
-    id_sha1,
-    algorithmIdentifier,
-    sha1WithRsa
+import ceylon.time.timezone {
+    timeZone
 }
-import de.dlkw.ccrypto.asn1 {
-    EncodingError,
-    objectIdentifier,
-    bitStringFromBytes,
-    Asn1Null,
-    printableString,
-    hexdump
+
+import de.dlkw.ccrypto.api.asn1.pkcs {
+    sha1WithRsaAlgId,
+    AlgorithmIdentifierAnySwitch,
+    rsaEncryptionAlgId
 }
 import de.dlkw.ccrypto.api.asn1.x509 {
     subjectPublicKeyInfo,
@@ -40,14 +27,37 @@ import de.dlkw.ccrypto.api.asn1.x509 {
     attributeValueAssertion,
     rdnSequence,
     relativeDistinguishedName,
-    validity,
-    certificate
+    certificate,
+    CertificateDecoder
+}
+import de.dlkw.ccrypto.asn1 {
+    EncodingError,
+    objectIdentifier,
+    bitStringFromBytes,
+    printableString,
+    hexdump,
+    Asn1NullDecoder,
+    DecodingError,
+    PrintableStringDecoder
+}
+import de.dlkw.ccrypto.impl {
+    rsaPublicKey,
+    os2ip,
+    rsaCrtPrivateKeyImpl,
+    sha1WithRsaSigner,
+    publicKeyFrom,
+    signatureVerifierFromAlgorithmId
+}
+import de.dlkw.ccrypto.api {
+    SignatureVerifier,
+    PublicKey
 }
 
 native shared void run();
 native("js") shared void run(){}
 
 test
+// jvm only just because there's no file writing (ceylon.file) for JavaScript!
 native("jvm") shared void run() {
     value path = home.childPath("privKey.der").resource;
     Writer w;
@@ -141,7 +151,8 @@ native("jvm") shared void run() {
     value rdn1 = relativeDistinguishedName{avas = [attC];};
     value rdn2 = relativeDistinguishedName{avas = [attO];};
     value rdn3 = relativeDistinguishedName{avas = [attCN];};
-    value rdnSeq = rdnSequence{rdns = [rdn1, rdn2, rdn3];};
+//    value rdnSeq = rdnSequence{rdns = [rdn1, rdn2, rdn3];};
+    value rdnSeq = rdnSequence{rdns = [rdn1];};
     value bitString = bitStringFromBytes(key.encoded);
     if (is EncodingError bitString) {
         print(bitString.message);
@@ -149,12 +160,13 @@ native("jvm") shared void run() {
     }
     value tbsCert = tbsCertificate{
         serialNumber = 5;
-        signature = sha1WithRsa;
+        signature = sha1WithRsaAlgId;
         version = 2;
         issuer = rdnSeq;
-        validity = validity(notBefore, notAfter);
+        notBefore = notBefore;
+        notAfter = notAfter;
         subject = rdnSeq;
-        subjectPublicKeyInfo = subjectPublicKeyInfo(sha1WithRsa, bitString);
+        subjectPublicKeyInfo = subjectPublicKeyInfo(rsaEncryptionAlgId, bitString);
         extensions = null;
     };
     if (is EncodingError tbsCert) {
@@ -166,11 +178,88 @@ native("jvm") shared void run() {
     
     value signer = sha1WithRsaSigner(privKey);
     value sig = signer.sign(tbsCert.encoded);
-    value cert = certificate(tbsCert, sha1WithRsa, sig);
+    value cert = certificate(tbsCert, sha1WithRsaAlgId, sig);
+    if (is EncodingError cert) {
+        print(cert.message);
+        return;
+    }
     print(cert.asn1String);
     print(cert.encoded);
     print(hexdump(cert.encoded));
     
     w.writeBytes(cert.encoded);
     w.close();
+
+    value keyAnySwitch = AlgorithmIdentifierAnySwitch(map({rsaEncryptionAlgId.objectIdentifier->Asn1NullDecoder()}));
+    value sigAnySwitch = AlgorithmIdentifierAnySwitch(map({sha1WithRsaAlgId.objectIdentifier->Asn1NullDecoder()}));
+    value nameAnySwitch = AlgorithmIdentifierAnySwitch(map({objectIdentifier([2, 5, 4, 6])->PrintableStringDecoder(),
+        objectIdentifier([2, 5, 4, 10])->PrintableStringDecoder(),
+        objectIdentifier([2, 5, 4, 3])->PrintableStringDecoder()}));
+    value decoder = CertificateDecoder(
+        sigAnySwitch,
+        nameAnySwitch,
+        keyAnySwitch
+    );
+    value c = decoder.decode(cert.encoded);
+    if (is DecodingError c) {
+        print(c.message);
+        return;
+    }
+    print(c[0].asn1String);
+    print(c[0].encoded);
+}
+
+test
+// jvm only just because there's no file reading (ceylon.file) for JavaScript!
+native("jvm") void readExtCert()
+{
+    value path = home.childPath("testcert.der").resource;
+    Reader r;
+    if (!is File path){
+        throw AssertionError("");
+    }
+    r = path.Reader();
+    
+    value cont = r.readBytes(path.size);
+    print(hexdump(cont));
+    
+    // collect all supported public key algorithms here
+    value keyAnySwitch = AlgorithmIdentifierAnySwitch(map({rsaEncryptionAlgId.objectIdentifier->Asn1NullDecoder()}));
+    
+    // collect all supported signature algorithms here
+    value sigAnySwitch = AlgorithmIdentifierAnySwitch(map({sha1WithRsaAlgId.objectIdentifier->Asn1NullDecoder()}));
+    
+    // collect all supported RDN attribute types here
+    value nameAnySwitch = AlgorithmIdentifierAnySwitch(map({objectIdentifier([2, 5, 4, 6])->PrintableStringDecoder(),
+        objectIdentifier([2, 5, 4, 10])->PrintableStringDecoder(),
+        objectIdentifier([2, 5, 4, 3])->PrintableStringDecoder()}));
+    
+    value decoder = CertificateDecoder(
+        sigAnySwitch,
+        nameAnySwitch,
+        keyAnySwitch
+    );
+    value c = decoder.decode(cont);
+    if (is DecodingError c) {
+        assert (exists m = c.message);
+        fail(m + "(" + c.offset.string + ")");
+        return;
+    }
+    
+    value certificate = c[0];
+    print(certificate.asn1String);
+    print(certificate.encoded);
+    
+    value key = publicKeyFrom(certificate.subjectPublicKeyInfo);
+    if (is DecodingError key) {
+        print(key.message);
+        return;
+    }
+   
+    SignatureVerifier? verifier = signatureVerifierFromAlgorithmId(certificate.signatureAlgorithm, key);
+    assert (exists verifier);
+    
+    assert(verifier.verify(certificate.signatureValue.bytes, certificate.tbsCertificate.encoded));
+    
+    // now play around accessing the attributes of the certificate!
 }

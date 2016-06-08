@@ -11,6 +11,14 @@ Note that IANAC (I am not a cryptologist), so this will surely be flawed in some
 **Do not use in production and don't rely on it in any expensive way whatsoever!**
 
 ## Changes
+
+* 2016-06-08 added most things needed ASN.1 to encode and decode X.509 certificates.
+  Still need support for X.500 names (AttributeValueAssertions with well-known object identifiers).
+  Right now, only common name (2.5.4.3), country (2.5.4.6) and organization (2.5.4.10) are supported.
+  No specific v3 extensions support yet. Need to implement some standard and well-known types. 
+  UTCTime is not finished
+* Removed erroneous and unnecessary dependency from api to impl module
+
 * added some ASN.1 (primitives and PKCS #1) stuff
 * implemented RSA signature scheme RSASSA-PKCS1-v1_5
 * now SHA-1 is also implemented, to be able to use the test vectors for PKCS #1
@@ -95,3 +103,20 @@ implemented PKCS #1 test vectors pass with the Java runtime, on JavaScript they 
 running very, very, veeery long. I didn't investigate further yet. (Upcoming version 1.2.3 of `ceylon.Whole`
 has supposedly been fixed to give the correct value for JavaScript. I didn't check, either.)
 
+## Certificates
+
+A first step was made to encode and decode X.509 certificates! You can generate certificates that can be parsed
+by the Java keytool and you can generate self-signed certificates with the Java keytool that can be parsed and
+signature-checked by this library. As UTCTime is not yet finished, you should use validity dates in or after 2050
+so that the PKIX turnover date definitions in keytool cause a GeneralizedTime to be inserted into the certificate :-)
+
+For example, generate a self-signed certificate (remember, only common name, organization, country are supported in the RDNs):
+
+```bash
+keytool -genkeypair -keyalg RSA -keysize 2048 -dname c=de -sigalg sha256WithRsa -keystore testgenkey.jks
+keytool -exportcert -keystore testgenkey.jks -file testcert.der
+```
+
+then decode it and check the signature, see function test.de.dlkw.ccrypto.x509::readExtCert in test-source.
+
+There's some (ugly) example code in the same file for creating a certificate.

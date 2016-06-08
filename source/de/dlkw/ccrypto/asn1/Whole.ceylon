@@ -8,12 +8,16 @@ import ceylon.whole {
    An ASN.1 INTEGER that can represent arbitrary large values
    using [[ceylon.whole::Whole]].
 """
-shared class Asn1Whole extends Asn1Value<Whole>
+shared class Asn1Whole(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
+         extends Asn1Value<Whole>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
-    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Whole valu)
-            extends Asn1Value<Whole>.direct(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, valu)
-    {}
-    
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentOctetsOffset;
+    Boolean violatesDer;
+    Whole valu;
+
     shared actual String asn1ValueString => "INTEGER ``val``";
     shared actual Tag defaultTag => UniversalTag.integer;
     

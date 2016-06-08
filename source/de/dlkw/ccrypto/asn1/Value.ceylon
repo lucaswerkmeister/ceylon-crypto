@@ -51,25 +51,16 @@ shared class GenericAsn1ValueDecoder("The (IMPLICIT) tag that must be present in
 
 "Base class for an ASN.1 value whose type definition is known."
 shared abstract class Asn1Value<out Value>
-        extends GenericAsn1Value
+        (encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, storedValue = null)
+        extends GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer)
         given Value satisfies Anything
 {
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentsOctetsOffset;
+    Boolean violatesDer;
     Value? storedValue;
-    
-    shared new direct(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentsOctetsOffset, Boolean violatesDer, Value? val = null)
-            extends GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer)
-    {
-        this.storedValue = val;
-    }
-    /*
-    shared new decoding(Byte[] encoded, Boolean violatesDer)
-    {
-        this.encoded = encoded;
-        this.violatesDer = violatesDer;
-        
-        this.storedValue = null;
-    }
-     */
 
     shared default Value decode(){
         // this error is thrown in subclasses that need to implement it and don't.

@@ -15,12 +15,16 @@ import ceylon.time.timezone {
     ZoneDateTime
 }
 
-shared class GeneralizedTime extends Asn1Value<Instant>
+shared class GeneralizedTime(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
+        extends Asn1Value<Instant>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
-    shared new (Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentsOctetsOffset, Boolean violatesDer, Instant valu)
-            extends Asn1Value<Instant>.direct(encoded, identityInfo, lengthOctetsOffset,  contentsOctetsOffset, violatesDer, valu)
-    {}
-    
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentOctetsOffset;
+    Boolean violatesDer;
+    Instant valu;
+
     shared actual String asn1ValueString
     {
         value dateTime = val.dateTime(timeZone.utc);
@@ -82,7 +86,7 @@ shared class GeneralizedTimeDecoder(Tag tag = UniversalTag.generalizedTime)
         Integer nextPos = offset + length;
         
         value contentsOctets = input[offset : length];
-        if (contentsOctets.size != length) {
+        if (contentsOctets.shorterThan(length)) {
             return DecodingError(offset + contentsOctets.size, "reached end of input");
         }
         

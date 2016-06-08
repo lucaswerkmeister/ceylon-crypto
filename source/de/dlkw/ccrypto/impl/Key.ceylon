@@ -5,7 +5,8 @@ import ceylon.whole {
 import de.dlkw.ccrypto.api {
     RsaExponentPrivateKey,
     RsaCrtPrivateKey,
-    RsaPublicKey
+    RsaPublicKey,
+    PublicKey
 }
 import de.dlkw.ccrypto.asn1 {
     asn1Integer,
@@ -24,7 +25,14 @@ import de.dlkw.ccrypto.asn1 {
     Descriptor,
     Asn1IntegerDecoder,
     Asn1WholeDecoder,
-    Asn1Sequ
+    Asn1Sequ,
+    Asn1Value
+}
+import de.dlkw.ccrypto.api.asn1.x509 {
+    SubjectPublicKeyInfo
+}
+import de.dlkw.ccrypto.api.asn1.pkcs {
+    rsaEncryptionAlgId
 }
 
 shared class RsaPublicKeyImpl(exponent, modulus)
@@ -52,6 +60,27 @@ shared class Asn1RsaPublicKeyImpl(encoded, identityInfo, lengthOctetsOffset, con
     shared actual Integer bitLength = calcBitLength(modulus);
 }
 
+shared class Asn1RsaPublicKeyImplDecoder(Tag tag = UniversalTag.sequence)
+         extends Decoder<Asn1RsaPublicKeyImpl>(tag)
+{
+    value delegate = SequenceDecoder<[Asn1Whole, Asn1Whole]>
+            ([Descriptor((_)=>Asn1WholeDecoder()), Descriptor((_)=>Asn1WholeDecoder())]);
+    
+    shared actual [Asn1RsaPublicKeyImpl, Integer]|DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
+    {
+        value x = delegate.decodeGivenTagAndLength(input, offset, identityInfo, length, identityOctetsOffset, lengthOctetsOffset, violatesDer);
+        if (is DecodingError x) {
+            return x;
+        }
+        value [seq, nextPos] = x;
+        violatesDer ||= seq.violatesDer;
+        
+        value decoded = seq.val;
+        value r = Asn1RsaPublicKeyImpl(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset, offset, violatesDer, decoded);
+        return [r, nextPos];
+    }
+}
+
 shared Asn1RsaPublicKeyImpl rsaPublicKey(exponent, modulus, Tag tag = UniversalTag.sequence)
 {
     Whole modulus;
@@ -65,6 +94,26 @@ shared Asn1RsaPublicKeyImpl rsaPublicKey(exponent, modulus, Tag tag = UniversalT
     
     value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = enc;
     return Asn1RsaPublicKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, [aModulus, aExponent]);
+}
+
+shared <PublicKey & Asn1Value<Anything>> | DecodingError publicKeyFrom(SubjectPublicKeyInfo<> subjectPublicKeyInfo)
+{
+    if (subjectPublicKeyInfo.algorithmIdentifier == rsaEncryptionAlgId) {
+        if (subjectPublicKeyInfo.encodedKey.unusedBits != 0) {
+            return DecodingError(-1, "BIT STRING length of public key encoding not multiple of 8");
+        }
+        return rsaPublicKeyFrom(subjectPublicKeyInfo.encodedKey.bytes);
+    }
+    return DecodingError(-1, "cannot decoded public key for unknown algorithm identifier");
+}
+
+shared Asn1RsaPublicKeyImpl | DecodingError rsaPublicKeyFrom(Byte[] encoded)
+{
+    value decoded = Asn1RsaPublicKeyImplDecoder().decode(encoded);
+    if (is DecodingError decoded) {
+        return decoded;
+    }
+    return decoded[0];
 }
 
 shared class RsaExponentPrivateKeyImpl(exponent, modulus)
