@@ -19,7 +19,13 @@ import ceylon.time.timezone {
 import de.dlkw.ccrypto.api.asn1.pkcs {
     sha1WithRsaAlgId,
     AlgorithmIdentifierAnySwitch,
-    rsaEncryptionAlgId
+    rsaEncryptionAlgId,
+    sha256WithRsaAlgId,
+    id_rsaEncryption,
+    id_sha1WithRsaEncryption,
+    id_rsaSsaPss,
+    RsaSsaParamsDecoder,
+    id_sha256WithRsaEncryption
 }
 import de.dlkw.ccrypto.api.asn1.x509 {
     subjectPublicKeyInfo,
@@ -213,10 +219,10 @@ test
 // jvm only just because there's no file reading (ceylon.file) for JavaScript!
 native("jvm") void readExtCert()
 {
-    value path = home.childPath("testcert.der").resource;
+    value path = home.childPath("testcert-02.der").resource;
     Reader r;
     if (!is File path){
-        throw AssertionError("");
+        throw AssertionError("file missing or not a plain file");
     }
     r = path.Reader();
     
@@ -224,10 +230,12 @@ native("jvm") void readExtCert()
     print(hexdump(cont));
     
     // collect all supported public key algorithms here
-    value keyAnySwitch = AlgorithmIdentifierAnySwitch(map({rsaEncryptionAlgId.objectIdentifier->Asn1NullDecoder()}));
+    value keyAnySwitch = AlgorithmIdentifierAnySwitch(map({id_rsaEncryption->Asn1NullDecoder()}));
     
     // collect all supported signature algorithms here
-    value sigAnySwitch = AlgorithmIdentifierAnySwitch(map({sha1WithRsaAlgId.objectIdentifier->Asn1NullDecoder()}));
+    value sigAnySwitch = AlgorithmIdentifierAnySwitch(map({
+        id_sha1WithRsaEncryption->Asn1NullDecoder(),
+        id_sha256WithRsaEncryption->Asn1NullDecoder()}));
     
     // collect all supported RDN attribute types here
     value nameAnySwitch = AlgorithmIdentifierAnySwitch(map({objectIdentifier([2, 5, 4, 6])->PrintableStringDecoder(),
