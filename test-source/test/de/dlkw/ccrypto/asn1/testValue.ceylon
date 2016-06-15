@@ -16,7 +16,7 @@ import com.athaydes.specks.matcher {
     sameAs
 }
 
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     GenericAsn1Value,
     GenericAsn1ValueDecoder,
     DecodingError,

@@ -11,7 +11,7 @@ import de.dlkw.ccrypto.api.asn1.pkcs {
     AlgorithmIdentifierAnySwitch,
     AlgorithmIdentifierDecoder
 }
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     IdentityInfo,
     BitString,
     TaggedValue,

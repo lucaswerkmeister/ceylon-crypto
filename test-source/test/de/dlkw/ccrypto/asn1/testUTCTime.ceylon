@@ -15,7 +15,7 @@ import com.athaydes.specks.matcher {
     sameAs
 }
 
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     EncodingError,
     utcTimeFromString,
     UTCTime,

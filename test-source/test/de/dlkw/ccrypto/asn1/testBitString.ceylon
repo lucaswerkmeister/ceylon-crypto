@@ -7,7 +7,7 @@ import ceylon.test {
     fail
 }
 
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     DecodingError,
     BitStringDecoder,
     bitStringFromBytes,

@@ -4,7 +4,7 @@ import de.dlkw.ccrypto.api {
 import de.dlkw.ccrypto.api.asn1.pkcs {
     AlgorithmIdentifier
 }
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     OctetString,
     octetString,
     asn1Sequence,

@@ -36,7 +36,7 @@ import de.dlkw.ccrypto.api.asn1.x509 {
     certificate,
     CertificateDecoder
 }
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     EncodingError,
     objectIdentifier,
     bitStringFromBytes,

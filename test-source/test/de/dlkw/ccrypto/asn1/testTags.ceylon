@@ -19,7 +19,7 @@ import com.athaydes.specks.matcher {
     not
 }
 
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     Tag,
     IdentityInfo,
     decodeIdentityOctets,

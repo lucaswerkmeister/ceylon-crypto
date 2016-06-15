@@ -8,6 +8,7 @@ shared class UniversalTag extends Tag
     shared new octetString      extends tag(4){}
     shared new null             extends tag(5){}
     shared new objectIdentifier extends tag(6){}
+    shared new utf8String       extends tag(12){}
     shared new sequence         extends tag(16){}
     shared new set              extends tag(17){}
     shared new printableString  extends tag(19){}

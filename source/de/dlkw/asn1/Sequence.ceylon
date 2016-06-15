@@ -46,6 +46,36 @@ shared [Byte[], IdentityInfo, Integer, Integer] | EncodingError encodeAsn1Sequen
     return [identityOctets.chain(encodedLength).chain(contentOctets).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size];
 }
 
+shared class Asn1Sequence<out Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Value<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        given Types satisfies [GenericAsn1Value?+]
+{
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentsOctetsOffset;
+    Boolean violatesDer;
+    Types elements;
+    
+    shared actual String asn1ValueString => "SEQUENCE { ``" ".join(val.map((x)=>x?.asn1String else "(absent)"))`` }";
+    shared actual Tag defaultTag => UniversalTag.sequence;
+}
+
+shared class Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Value<Inner[]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        given Inner satisfies Asn1Value<Anything>
+        {
+    Byte[] encoded;
+    IdentityInfo identityInfo;
+    Integer lengthOctetsOffset;
+    Integer contentsOctetsOffset;
+    Boolean violatesDer;
+    Inner[] elements;
+    
+    shared actual String asn1ValueString => "SEQUENCE OF { ``" ".join(val.map((x)=>x.asn1String))`` }";
+    shared actual Tag defaultTag => UniversalTag.sequence;
+}
+
 shared Asn1Sequence<Types> | EncodingError asn1Sequence<Types>(Types elements, [Asn1Value<Anything> | Option +] defaults, Tag tag = UniversalTag.sequence)
         given Types satisfies [Asn1Value<Anything>?+]
 {
@@ -56,6 +86,16 @@ shared Asn1Sequence<Types> | EncodingError asn1Sequence<Types>(Types elements, [
     value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = res;
     
     return Asn1Sequence<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, elements);
+}
+
+shared Asn1SequenceOf<Inner> asn1SequenceOf<Inner>(Inner[] elements, Tag tag = UniversalTag.sequence)
+        given Inner satisfies Asn1Value<Anything>
+        {
+    value en = encodeAsn1Sequence(elements, elements.collect((_) => Option.mandatory), tag);
+    assert (!is EncodingError en);
+    
+    value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = en;
+    return Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, elements);
 }
 
 shared class Option of optional | mandatory
@@ -226,6 +266,50 @@ shared class SequenceDecoder<out Types>(els, Tag tag = UniversalTag.sequence)
             throw AssertionError("Type mismatch error while sequence decoding. Check type parameters of Asn1Sequence and type parameters of the employed Decoders. Note: OPTIONAL values correspond to intersection types with ceylon.language::Null.");
         }
         value int = Asn1Sequence(input[identityOctetsOffset .. startPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, contentStart - identityOctetsOffset, violatesDer, result);
+        return [int, startPos];
+    }
+}
+
+shared class SequenceOfDecoder<Inner>(innerDecoder, Tag tag = UniversalTag.sequence)
+        extends Decoder<Asn1SequenceOf<Inner>>(tag)
+        given Inner satisfies Asn1Value<Anything>
+        {
+    Decoder<Inner> innerDecoder;
+    
+    shared default actual [Asn1SequenceOf<Inner>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer contentStart, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
+    {
+        variable Inner[] tmpResult = [];
+        
+        variable Integer startPos = contentStart;
+        while (startPos < contentStart + length) {
+            value res0 = decodeIdentityOctets(input, startPos);
+            if (is DecodingError res0) {
+                return res0;
+            }
+            value [l0, lengthAndContentStart] = res0;
+            
+            assert (exists expectedTag = innerDecoder.tag);
+            if (l0.tag == expectedTag) {
+                value decoded = innerDecoder.decodeGivenTag(input, lengthAndContentStart, l0, startPos, violatesDer);
+                if (is DecodingError decoded) {
+                    return decoded;
+                }
+                value decodedElement = decoded[0];
+                violatesDer ||= decodedElement.violatesDer;
+                
+                tmpResult = tmpResult.withTrailing(decodedElement);
+                
+                startPos = decoded[1];
+            }
+            else {
+                return DecodingError(startPos, "tags of elements in SEQUENCE OF differ");
+            }
+        }
+        if (startPos != contentStart + length) {
+            return DecodingError(startPos, "SEQUENCE OF content is longer than described by SEQUENCE OF's length octet(s)");
+        }
+        
+        value int = Asn1SequenceOf(input[identityOctetsOffset .. startPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, contentStart - identityOctetsOffset, violatesDer, tmpResult);
         return [int, startPos];
     }
 }

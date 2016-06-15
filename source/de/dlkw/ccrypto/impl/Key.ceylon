@@ -8,7 +8,7 @@ import de.dlkw.ccrypto.api {
     RsaPublicKey,
     PublicKey
 }
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     asn1Integer,
     Asn1Integer,
     Asn1Whole,

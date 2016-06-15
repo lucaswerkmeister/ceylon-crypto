@@ -14,7 +14,7 @@ import de.dlkw.ccrypto.api.asn1.pkcs {
     sha1AlgIdExplicitParam,
     DigestInfoDecoder
 }
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     ObjectIdentifier,
     Asn1Value,
     DecodingError,

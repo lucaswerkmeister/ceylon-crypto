@@ -9,7 +9,7 @@ import ceylon.whole {
     formatWhole
 }
 
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     hexdump
 }
 import de.dlkw.ccrypto.impl {

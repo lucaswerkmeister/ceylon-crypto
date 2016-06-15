@@ -1,4 +1,4 @@
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     OctetString,
     IdentityInfo,
     encodeAsn1Sequence,

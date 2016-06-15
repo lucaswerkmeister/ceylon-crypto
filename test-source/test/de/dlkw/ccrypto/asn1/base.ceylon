@@ -2,7 +2,7 @@ import ceylon.test {
     test
 }
 
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     IdentityInfo,
     TagClass,
     decodeIdentityOctets,

@@ -12,7 +12,7 @@ import ceylon.whole {
     wholeNumber
 }
 
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     DecodingError,
     Asn1WholeDecoder,
     asn1Whole

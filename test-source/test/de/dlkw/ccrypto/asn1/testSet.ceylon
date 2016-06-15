@@ -2,7 +2,7 @@ import ceylon.test {
     test,
     fail
 }
-import de.dlkw.ccrypto.asn1 {
+import de.dlkw.asn1 {
     asn1SetOf,
     asn1Integer,
     EncodingError,
