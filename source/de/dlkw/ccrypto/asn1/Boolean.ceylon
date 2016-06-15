@@ -13,6 +13,7 @@ shared class Asn1Boolean(encoded, identityInfo, lengthOctetsOffset, contentOctet
     shared actual Tag defaultTag => UniversalTag.boolean;
 }
 
+"Creates an ASN.1 BOOLEAN."
 shared Asn1Boolean asn1Boolean(Boolean val, Tag tag = UniversalTag.boolean)
 {
     value identityInfo = IdentityInfo(tag, false);
@@ -22,6 +23,8 @@ shared Asn1Boolean asn1Boolean(Boolean val, Tag tag = UniversalTag.boolean)
     return Asn1Boolean(identityOctets.withTrailing(2.byte).withTrailing(if (val) then #ff.byte else #00.byte), identityInfo, lengthOctetsOffset, lengthOctetsOffset + 1, false, val);
 }
 
+"Decodes an ASN.1 BOOLEAN. Returns an error if the length octets encode any value
+ other than 1"
 shared class Asn1BooleanDecoder(Tag tag = UniversalTag.boolean)
         extends Decoder<Asn1Boolean>(tag)
 {

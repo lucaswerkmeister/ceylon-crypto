@@ -9,22 +9,25 @@ shared class GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, content
      and the contents octets start at offset [[contentsOctetsOffset]]."
     shared Byte[] encoded;
     
-    "Decoded form of the BER identity octetsof this value."
+    "Decoded form of the BER encoded identity octets of this value."
     shared IdentityInfo identityInfo;
     
+    // TODO ponder if lengthOctetsOffset should really be stored here
+    // or re-calculated from encoding when needed.
     "The start of the length octets in [[encoded]]."
     shared Integer lengthOctetsOffset;
     
+    // TODO ponder if contentsOctetsOffset should really be stored here
+    // or re-calculated from encoding when needed.
     "The start of the content octets in [[encoded]]."
     shared Integer contentsOctetsOffset;
     
     "Indicates if the BER encoding of this value violates the DER (ASN.1 distinguished encoding rules), that is,
      if it is **not** in canonical form."
-    /* FIXME does that really make sense here? Maybe we should say that without knowing the
-       ASN.1 type definition, we cannot say if it violates the DER. */
+    // DER can be violated in the encoding of the length!
     shared Boolean violatesDer;
     
-    shared Byte[] identityOctets => encoded[...lengthOctetsOffset];
+    shared Byte[] identityOctets => encoded[...lengthOctetsOffset - 1];
     shared Byte[] lengthOctets => encoded[lengthOctetsOffset .. contentsOctetsOffset - 1];
     shared Byte[] contentsOctets => encoded[contentsOctetsOffset...];
     

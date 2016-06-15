@@ -158,8 +158,7 @@ shared class SequenceOfDecoder<Inner>(innerDecoder, Tag tag = UniversalTag.seque
             if (is DecodingError res0) {
                 return res0;
             }
-            value [l0, lengthAndContentStart, violates0] = res0;
-            violatesDer ||= violates0;
+            value [l0, lengthAndContentStart] = res0;
             
             assert (exists expectedTag = innerDecoder.tag);
             if (l0.tag == expectedTag) {
@@ -204,8 +203,7 @@ shared class SetOfDecoder<Inner>(innerDecoder, Tag tag = UniversalTag.set)
             if (is DecodingError res0) {
                 return res0;
             }
-            value [l0, lengthAndContentStart, violates0] = res0;
-            violatesDer ||= violates0;
+            value [l0, lengthAndContentStart] = res0;
             
             assert (exists expectedTag = innerDecoder.tag);
             if (l0.tag == expectedTag) {

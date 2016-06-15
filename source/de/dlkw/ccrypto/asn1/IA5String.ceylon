@@ -9,6 +9,7 @@ import ceylon.whole {
     Whole
 }
 
+"IA5String is treated like ASCII."
 shared class IA5String(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
         extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
@@ -23,6 +24,9 @@ shared class IA5String(encoded, identityInfo, lengthOctetsOffset, contentOctetsO
     shared actual Tag defaultTag => UniversalTag.ia5String;
 }
 
+"
+ Creates an ASN.1 IA5String. Returns an error if [[val]] is not representable as ASCII.
+"
 shared IA5String | EncodingError ia5String(String val, Tag tag = UniversalTag.ia5String)
 {
     value identityInfo = IdentityInfo(tag, false);
@@ -40,46 +44,23 @@ shared IA5String | EncodingError ia5String(String val, Tag tag = UniversalTag.ia
     return IA5String(identityOctets.chain(encodedLength).chain(encodedString).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, val);
 }
 
+"
+ Decodes an ASN.1 IA5String. Returns an error if the contents contains octets that are
+ not ASCII values, that is, if they larger than 127.
+"
 shared class IA5StringDecoder(Tag tag = UniversalTag.ia5String)
-        extends Decoder<IA5String>(tag)
+        extends StdDecoder<IA5String>(tag)
 {
-    shared actual [IA5String, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
+    shared actual IA5String | DecodingError decodeContents(Byte[] contents, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentsOctetsOffset)
     {
-        Integer nextPos = offset + length;
-        
-        value contentsOctets = input[offset : length];
-        if (contentsOctets.size != length) {
-            return DecodingError(offset + contentsOctets.size, "reached end of input");
-        }
-        
         String string;
         try {
-            string = ascii.decode(contentsOctets);
+            string = ascii.decode(contents);
         }
         catch (DecodeException e) {
-            return DecodingError(offset, "Cannot decode IA5String: ``e.message``");
+            return DecodingError(0, "Cannot decode IA5String: ``e.message``");
         }
         
-        value os = IA5String(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer, string);
-        return [os, nextPos];
+        return IA5String(contents, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, string);
     }
-}
-
-shared void trun()
-{
-    value x = ia5String("56");
-    if (is EncodingError x) {
-        print(x.message);
-        return;
-    }
-    print(x.encoded);
-    print(x.asn1String);
-    
-    value y = IA5StringDecoder().decode([22.byte, 1.byte, #6f.byte]);
-    if (is DecodingError y) {
-        print(y.message);
-        return;
-    }
-    print(y[0].encoded);
-    print(y[0].asn1String);
 }

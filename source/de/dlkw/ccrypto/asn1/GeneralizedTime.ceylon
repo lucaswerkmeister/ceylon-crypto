@@ -6,65 +6,57 @@ import ceylon.buffer.codec {
 }
 import ceylon.time {
     Instant,
-    DateTime,
-    now
+    now,
+    DateTime
+}
+import ceylon.time.iso8601 {
+    parseZoneDateTime,
+    parseDateTime
 }
 import ceylon.time.timezone {
     timeZone,
-    zoneDateTime,
-    ZoneDateTime
+    ZoneDateTime,
+    zoneDateTime
 }
 
-shared class GeneralizedTime(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
-        extends Asn1Value<Instant>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
+shared class GeneralizedTime(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu, dateTime)
+        extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
     Byte[] encoded;
     IdentityInfo identityInfo;
     Integer lengthOctetsOffset;
     Integer contentOctetsOffset;
     Boolean violatesDer;
-    Instant valu;
+    String valu;
+    shared DateTime | ZoneDateTime dateTime;
 
     shared actual String asn1ValueString
     {
-        value dateTime = val.dateTime(timeZone.utc);
-        value sb = StringBuilder();
-        sb.appendCharacter('"');
-        sb.append(formatInteger(dateTime.year).padLeading(4, '0'))
-            .append(formatInteger(dateTime.month.integer).padLeading(2, '0'))
-            .append(formatInteger(dateTime.day).padLeading(2, '0'))
-            .append(formatInteger(dateTime.hours).padLeading(2, '0'))
-            .append(formatInteger(dateTime.minutes).padLeading(2, '0'))
-            .append(formatInteger(dateTime.seconds).padLeading(2, '0'));
-        if (dateTime.milliseconds > 0) {
-            sb.appendCharacter('.').append(dateTime.milliseconds.string.padLeading(3, '0'));
-        }
-        sb.append("Z\"");
-        return sb.string;
+        return "\"``valu``\"";
     }
     shared actual Tag defaultTag => UniversalTag.generalizedTime;
 }
 
-shared GeneralizedTime | EncodingError generalizedTime(Instant instant, Tag tag = UniversalTag.generalizedTime)
+shared GeneralizedTime | EncodingError generalizedTimeFromInstant(Instant instant, Tag tag = UniversalTag.generalizedTime)
 {
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;
     
-    DateTime utcValue = instant.dateTime(timeZone.utc);
+    ZoneDateTime zoneDateTime = instant.zoneDateTime(timeZone.utc);
     StringBuilder stringValue = StringBuilder();
-    stringValue.append(utcValue.year.string.padLeading(4, '0'));
-    stringValue.append(utcValue.month.integer.string.padLeading(2, '0'));
-    stringValue.append(utcValue.day.string.padLeading(2, '0'));
+    stringValue.append(zoneDateTime.year.string.padLeading(4, '0'));
+    stringValue.append(zoneDateTime.month.integer.string.padLeading(2, '0'));
+    stringValue.append(zoneDateTime.day.string.padLeading(2, '0'));
     
-    stringValue.append(utcValue.hours.string.padLeading(2, '0'));
-    stringValue.append(utcValue.minutes.string.padLeading(2, '0'));
-    stringValue.append(utcValue.seconds.string.padLeading(2, '0'));
+    stringValue.append(zoneDateTime.hours.string.padLeading(2, '0'));
+    stringValue.append(zoneDateTime.minutes.string.padLeading(2, '0'));
+    stringValue.append(zoneDateTime.seconds.string.padLeading(2, '0'));
     
-    if (utcValue.milliseconds != 0) {
+    if (zoneDateTime.milliseconds != 0) {
         stringValue.appendCharacter('.');
         Integer numSubSecondDigits = 3;
-        String s = utcValue.milliseconds.string.padLeading(numSubSecondDigits, '0');
+        String s = zoneDateTime.milliseconds.string.padLeading(numSubSecondDigits, '0');
         value pos = s.lastIndexWhere((c) => c != '0');
         assert (exists pos);
         stringValue.append(s[0 .. pos]);
@@ -75,7 +67,57 @@ shared GeneralizedTime | EncodingError generalizedTime(Instant instant, Tag tag 
     List<Byte> encodedString = ascii.encode(stringValue);
 
     value encodedLength = encodeLength(encodedString.size);
-    return GeneralizedTime(identityOctets.chain(encodedLength).chain(encodedString).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, instant);
+    return GeneralizedTime(identityOctets.chain(encodedLength).chain(encodedString).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, stringValue.string, zoneDateTime);
+}
+
+shared GeneralizedTime | EncodingError generalizedTimeFromString(String stringValue, Tag tag = UniversalTag.generalizedTime)
+{
+    value identityInfo = IdentityInfo(tag, false);
+    value identityOctets = identityInfo.encoded;
+    value lengthOctetsOffset = identityOctets.size;
+    
+    value length = stringValue.size;
+    if (length < 10) {
+        return EncodingError("too few characters for GeneralizedTime");
+    }
+    
+    value datePart = stringValue[0:8];
+    if (datePart.any((c) => c == 'W')) {
+        return EncodingError("illegal character 'W' in GeneralizedTime");
+    }
+    
+    value isoString = "``datePart``T``stringValue[8...]``";
+    print(isoString);
+    
+    Boolean useZone;
+    if (exists c = stringValue.last, c == 'Z') {
+        useZone = true;
+    }
+    else {
+        useZone = stringValue.lastIndexWhere((c) => c in ['+', '-']) exists;
+    }
+    
+    ZoneDateTime | DateTime zdt;
+    if (useZone) {
+        value zoneDateTime = parseZoneDateTime(isoString);
+        if (is Null zoneDateTime) {
+            return EncodingError("not a valid gt string");
+        }
+        zdt = zoneDateTime;
+    }
+    else {
+        value dateTime = parseDateTime(isoString);
+        if (is Null dateTime) {
+            return EncodingError("not a valid gt string");
+        }
+        zdt = dateTime;
+    }
+
+    List<Byte> encodedString = ascii.encode(stringValue);
+    print(zdt);
+    
+    value encodedLength = encodeLength(encodedString.size);
+    return GeneralizedTime(identityOctets.chain(encodedLength).chain(encodedString).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, stringValue, zdt);
 }
 
 shared class GeneralizedTimeDecoder(Tag tag = UniversalTag.generalizedTime)
@@ -170,28 +212,46 @@ shared class GeneralizedTimeDecoder(Tag tag = UniversalTag.generalizedTime)
             return DecodingError(offset, "Cannot decode GeneralizedTime: ``e.message``");
         }
         
-        value os = GeneralizedTime(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer, zdt.instant);
+        value os = GeneralizedTime(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer, string, zdt);
         return [os, nextPos];
     }
 }
 
 shared void zrun()
 {
-    value x = generalizedTime(now());
+    value x = generalizedTimeFromInstant(now());
     if (is EncodingError x) {
         print(x.message);
         return;
     }
     print(x.encoded);
+    print(x.dateTime);
     print(x.asn1String);
     
-    value y = GeneralizedTimeDecoder().decode([24.byte, 17.byte, 48.byte, 48.byte, 48.byte, 49.byte, 48.byte, 50.byte, 50.byte, 56.byte, 48.byte, 48.byte, 48.byte, 48.byte, 53.byte, 48.byte, 46.byte, 48.byte, 90.byte]);
+    value y = GeneralizedTimeDecoder().decode([24.byte, 16.byte, 48.byte, 48.byte, 48.byte, 49.byte, 48.byte, 50.byte, 50.byte, 56.byte, 48.byte, 48.byte, 48.byte, 48.byte, 53.byte, 48.byte, 46.byte, 48.byte]);
 //    value y = GeneralizedTimeDecoder().decode(x.encoded);
     if (is DecodingError y) {
         print(y.message);
         return;
     }
     print(y[0].encoded);
+    print(y[0].dateTime);
     print(y[0].asn1String);
     assert (!y[0].violatesDer);
+    
+    value z = generalizedTimeFromString("20160314001909.3");
+    if (is EncodingError z) {
+        print(z.message);
+        return;
+    }
+    print(z.encoded);
+    print(z.dateTime);
+    print(z.asn1String);
+}
+
+shared void rrre()
+{
+    print(parseDateTime("20160611T123456.7")); // 2016-06-11T12:34:56.007
+    print(parseDateTime("20160611T10.025")); // 2016-06-11T12:01:00.000
+    print(parseDateTime("20160611T10.01")); // 2016-06-11T12:34:56.007
 }

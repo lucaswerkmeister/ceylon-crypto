@@ -133,12 +133,11 @@ void decodeTag1()
     value buf= [#00.byte];
     value r = decodeIdentityOctets(buf);
     assert (!is DecodingError r);
-    value [tagInfo, rest, violatesDer] = r;
+    value [tagInfo, rest] = r;
     assert (tagInfo.tag.tagClass == TagClass.universal);
     assert (tagInfo.tag.tagNumber == 0);
     assert (tagInfo.constructed == false);
     assert (rest == 1);
-    assert (violatesDer == false);
 }
 
 test
@@ -147,12 +146,11 @@ void decodeTag2()
     value buf= [#82.byte];
     value r = decodeIdentityOctets(buf);
     assert (!is DecodingError r);
-    value [tagInfo, rest, violatesDer] = r;
+    value [tagInfo, rest] = r;
     assert (tagInfo.tag.tagClass == TagClass.contextSpecific);
     assert (tagInfo.tag.tagNumber == 2);
     assert (tagInfo.constructed == false);
     assert (rest == 1);
-    assert (violatesDer == false);
 }
 
 test
@@ -161,12 +159,11 @@ void decodeTag3()
     value buf= [#5e.byte];
     value r = decodeIdentityOctets(buf);
     assert (!is DecodingError r);
-    value [tagInfo, rest, violatesDer] = r;
+    value [tagInfo, rest] = r;
     assert (tagInfo.tag.tagClass == TagClass.application);
     assert (tagInfo.tag.tagNumber == 30);
     assert (tagInfo.constructed == false);
     assert (rest == 1);
-    assert (violatesDer == false);
 }
 
 test
@@ -175,12 +172,11 @@ void decodeTag4()
     value buf= [#ce.byte];
     value r = decodeIdentityOctets(buf);
     assert (!is DecodingError r);
-    value [tagInfo, rest, violatesDer] = r;
+    value [tagInfo, rest] = r;
     assert (tagInfo.tag.tagClass == TagClass.private);
     assert (tagInfo.tag.tagNumber == 14);
     assert (tagInfo.constructed == false);
     assert (rest == 1);
-    assert (violatesDer == false);
 }
 
 test
@@ -189,12 +185,11 @@ void decodeTag5()
     value buf= [#ee.byte, #aa.byte];
     value r = decodeIdentityOctets(buf);
     assert (!is DecodingError r);
-    value [tagInfo, rest, violatesDer] = r;
+    value [tagInfo, rest] = r;
     assert (tagInfo.tag.tagClass == TagClass.private);
     assert (tagInfo.tag.tagNumber == 14);
     assert (tagInfo.constructed == true);
     assert (rest == 1);
-    assert (violatesDer == false);
 }
 
 test
@@ -203,12 +198,11 @@ void decodeTag6()
     value buf= [#9f.byte, #2a.byte];
     value r = decodeIdentityOctets(buf);
     assert (!is DecodingError r);
-    value [tagInfo, rest, violatesDer] = r;
+    value [tagInfo, rest] = r;
     assert (tagInfo.tag.tagClass == TagClass.contextSpecific);
     assert (tagInfo.tag.tagNumber == 42);
     assert (tagInfo.constructed == false);
     assert (rest == 2);
-    assert (violatesDer == true);
 }
 
 test
@@ -217,12 +211,11 @@ void decodeTag7()
     value buf= [#9f.byte, #81.byte, #02.byte, #03.byte];
     value r = decodeIdentityOctets(buf);
     assert (!is DecodingError r);
-    value [tagInfo, rest, violatesDer] = r;
+    value [tagInfo, rest] = r;
     assert (tagInfo.tag.tagClass == TagClass.contextSpecific);
     assert (tagInfo.tag.tagNumber == 130);
     assert (tagInfo.constructed == false);
     assert (rest == 3);
-    assert (violatesDer == false);
 }
 
 test

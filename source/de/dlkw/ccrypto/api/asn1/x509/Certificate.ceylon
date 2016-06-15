@@ -31,7 +31,6 @@ import de.dlkw.ccrypto.asn1 {
     Option,
     EncodingError,
     bitStringFromBytes,
-    generalizedTime,
     taggedValue,
     asn1Integer,
     DecodingError,
@@ -51,7 +50,13 @@ import de.dlkw.ccrypto.asn1 {
     OctetStringDecoder,
     asn1Boolean,
     ChoiceDecoder,
-    UTCTimeDecoder
+    UTCTimeDecoder,
+    generalizedTimeFromInstant,
+    utcTimeFromInstant
+}
+import ceylon.time.timezone {
+    ZoneDateTime,
+    timeZone
 }
 
 shared class Certificate(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
@@ -173,6 +178,9 @@ shared TBSCertificate | EncodingError tbsCertificate(version, serialNumber, sign
     value asn1Version = taggedValue(asn1Integer(version), Tag(0));
     value asn1Serial = asn1Integer(serialNumber);
     value certValidity = validity(notBefore, notAfter);
+    if (is EncodingError certValidity) {
+        return certValidity;
+    }
     // TODO issuer and subject alternate names with expl. tags 1 and 2
     value asn1Extensions = if (exists extensions)
         then taggedValue(extensions, Tag(3))
@@ -480,10 +488,13 @@ shared class Validity(encoded, identityInfo, lengthOctetsOffset, contentsOctetsO
     {
         value val = elements[0];
         if (is GeneralizedTime val) {
-            return val.val;
+            assert (is ZoneDateTime zdt = val.dateTime);
+            return zdt.instant;
         }
         else {
-            throw AssertionError("unimplemented");
+            // UTCTime
+            assert (is ZoneDateTime zdt = val.dateTime);
+            return zdt.instant;
         }
     }
     
@@ -491,27 +502,60 @@ shared class Validity(encoded, identityInfo, lengthOctetsOffset, contentsOctetsO
     {
         value val = elements[1];
         if (is GeneralizedTime val) {
-            return val.val;
+            assert (is ZoneDateTime zdt = val.dateTime);
+            return zdt.instant;
         }
         else {
-            throw AssertionError("unimplemented");
+            // UTCTime
+            assert (is ZoneDateTime zdt = val.dateTime);
+            return zdt.instant;
         }
     }
 }
 
 shared alias Time => UTCTime | GeneralizedTime;
 
-shared Validity validity(Instant notBefore, Instant notAfter, Tag tag = UniversalTag.sequence)
+shared Validity|EncodingError validity(Instant notBefore, Instant notAfter, Tag tag = UniversalTag.sequence)
 {
-    value gtNotBefore = generalizedTime(notBefore);
-    assert (!is EncodingError gtNotBefore);
-    value gtNotAfter = generalizedTime(notAfter);
-    assert (!is EncodingError gtNotAfter);
+    // according to PKIX (RFC5280. 4.1.2.5), encode all dates before the year 2050
+    // as UTCTime, and all dates in or after the year 2050 as GeneralizedTime.
+    
+    UTCTime | GeneralizedTime tNotBefore;
+    if (notBefore.zoneDateTime(timeZone.utc).year < 2050) {
+        value t = utcTimeFromInstant(notBefore);
+        if (is EncodingError t) {
+            return t;
+        }
+        tNotBefore = t;
+    }
+    else {
+        value t = generalizedTimeFromInstant(notBefore);
+        if (is EncodingError t) {
+            return t;
+        }
+        tNotBefore = t;
+    }
 
-    value x = encodeAsn1Sequence([gtNotBefore, gtNotAfter], [Option.mandatory, Option.mandatory], tag);
+    UTCTime | GeneralizedTime tNotAfter;
+    if (notAfter.zoneDateTime(timeZone.utc).year < 2050) {
+        value t = utcTimeFromInstant(notAfter);
+        if (is EncodingError t) {
+            return t;
+        }
+        tNotAfter = t;
+    }
+    else {
+        value t = generalizedTimeFromInstant(notAfter);
+        if (is EncodingError t) {
+            return t;
+        }
+        tNotAfter = t;
+    }
+
+    value x = encodeAsn1Sequence([tNotBefore, tNotAfter], [Option.mandatory, Option.mandatory], tag);
     assert (!is EncodingError x);
     value [encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset] = x;
-    return Validity(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, [gtNotBefore, gtNotAfter]);
+    return Validity(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, [tNotBefore, tNotAfter]);
 }
 
 shared class ValidityDecoder(Tag tag = UniversalTag.sequence)
@@ -521,8 +565,8 @@ shared class ValidityDecoder(Tag tag = UniversalTag.sequence)
         <UTCTime | GeneralizedTime>,
         <UTCTime | GeneralizedTime>
     ]>([
-        Descriptor((_)=>ChoiceDecoder([UTCTimeDecoder(), GeneralizedTimeDecoder()])),
-        Descriptor((_)=>ChoiceDecoder([UTCTimeDecoder(), GeneralizedTimeDecoder()]))
+        Descriptor((_)=>ChoiceDecoder([UTCTimeDecoder(2049), GeneralizedTimeDecoder()])),
+        Descriptor((_)=>ChoiceDecoder([UTCTimeDecoder(2049), GeneralizedTimeDecoder()]))
     ]);
     
     shared actual [Validity, Integer]|DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
@@ -666,6 +710,10 @@ shared void tCert()
     value notAfter = parseZoneDateTime("2016-05-18T03:54:01Z")?.instant;
     assert (exists notAfter);
     value certValidity = validity(notBefore, notAfter);
+    if (is EncodingError certValidity) {
+        print(certValidity.message);
+        return;
+    }
     print(certValidity.encoded);
     print(certValidity.asn1String);
 }

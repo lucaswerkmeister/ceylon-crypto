@@ -33,8 +33,7 @@ shared class TaggedValueDecoder<Type>(Tag tag, Decoder<Type> innerDecoder)
         if (is DecodingError res1) {
             return res1;
         }
-        value [innerId, innerLengthAndContentStart, violates1] = res1;
-        violatesDer ||= violates1;
+        value [innerId, innerLengthAndContentStart] = res1;
         
         value res2 = innerDecoder.decodeGivenTag(input, innerLengthAndContentStart, innerId, offset, violatesDer);
         if (is DecodingError res2) {

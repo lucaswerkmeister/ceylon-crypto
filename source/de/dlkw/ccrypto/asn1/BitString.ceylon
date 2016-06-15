@@ -52,7 +52,7 @@ shared BitString | EncodingError bitStringFromBytes(Byte[] bytes, Integer number
     if (exists lastByte = bytes.last) {
         Byte mask = (1.leftLogicalShift(unusedBits) - 1).byte;
         if (lastByte.and(mask) != 0.byte) {
-            // FIXME maybe instead set unused bits to zero
+            // TODO maybe instead set unused bits to zero
             return EncodingError("unused bits are not zero");
         }
     }
@@ -92,23 +92,4 @@ shared class BitStringDecoder(Tag tag = UniversalTag.bitString)
         value os = BitString(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer, unusedBits);
         return [os, nextPos];
     }
-}
-
-shared void rrun()
-{
-    value b = bitStringFromBytes([]);
-    if (is EncodingError b) {
-        print(b.message);
-        return;
-    }
-    print(b.asn1String);
-    print(b.encoded);
-    
-    value c = BitStringDecoder().decode(b.encoded);
-    if (is DecodingError c) {
-        print(c.message);
-        return;
-    }
-    print(c[0].asn1String);
-    print(c[0].encoded);
 }

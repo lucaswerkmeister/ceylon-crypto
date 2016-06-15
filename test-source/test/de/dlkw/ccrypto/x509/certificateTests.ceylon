@@ -270,4 +270,5 @@ native("jvm") void readExtCert()
     assert(verifier.verify(certificate.signatureValue.bytes, certificate.tbsCertificate.encoded));
     
     // now play around accessing the attributes of the certificate!
+    print(certificate.issuer.asn1String);
 }

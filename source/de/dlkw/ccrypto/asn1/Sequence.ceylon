@@ -2,16 +2,6 @@ import ceylon.language.meta {
     type
 }
 
-"""
-   For SEQUENCE and SET, Types should contain at least one element, for SEQUENCE OF and SET OF, Types may be Empty.
-"""
-shared abstract class Asn1Aggregation<out Types>(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Types _elements)
-        extends Asn1Value<Types>(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, _elements)
-        given Types satisfies GenericAsn1Value?[]
-{
-    shared Types elements => val;
-}
-
 // FIXME real ugly. Need to ascertain elements and defaults sequence elements are of same Asn1Value
 """
    Returns the encoded octets, the identity octets info, the offset of the length octets in the encoded octets, and the the offset of the contents octets.
@@ -98,8 +88,7 @@ shared class GenericSequenceDecoder(Tag tag = UniversalTag.sequence)
             if (is DecodingError res0) {
                 return res0;
             }
-            value [l0, lengthAndContentStart, violates0] = res0;
-            violatesDer ||= violates0;
+            value [l0, lengthAndContentStart] = res0;
             
             if (l0.tag.tagClass == TagClass.universal) {
                 Decoder<Asn1Value<Anything>> decoder;
@@ -155,8 +144,7 @@ shared class SequenceDecoder<out Types>(els, Tag tag = UniversalTag.sequence)
             if (is DecodingError res0) {
                 return res0;
             }
-            value [l0, lengthAndContentStart, violates0] = res0;
-            violatesDer ||= violates0;
+            value [l0, lengthAndContentStart] = res0;
             
             variable Boolean found = false;
             while (!is Finished el = defIter.next()) {
