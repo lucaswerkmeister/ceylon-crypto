@@ -9,10 +9,12 @@ import ceylon.test {
 import com.athaydes.specks {
     SpecksTestExecutor,
     feature,
-    Specification
+    Specification,
+    errorCheck
 }
 import com.athaydes.specks.assertion {
-    expect
+    expect,
+    expectToThrow
 }
 import com.athaydes.specks.matcher {
     sameAs,
@@ -107,20 +109,17 @@ class TagsTests()
     test
     shared Specification testEncodeTagsFails() => Specification
     {
-        feature {
+        errorCheck {
             description="encoding invalid tags yields an error";
             
-            when(Integer tagNumber, Byte[] expectedEncoding) => [tagNumber, IdentityInfo(Tag(tagNumber), false), expectedEncoding];
+            when(Integer tagNumber) => IdentityInfo(Tag(tagNumber), false);
             
             examples = {
                 // negative tag number not allowed.
-                [-1, [$1000_0001.byte]]
+                [-1]
             };
             
-            assertions = {
-                (Integer tagNumber, IdentityInfo identityInfo, Byte[] expectedEncoding)
-                        => expect(identityInfo.encoded, sameAs(expectedEncoding))
-            };
+            expectToThrow(`Exception`)
         }
     };
 

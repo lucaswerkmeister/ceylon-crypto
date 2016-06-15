@@ -14,6 +14,7 @@
    to the constructor of the class implemented in step 1.
    3. a [[Decoder]] subclass using the decodeSequence, decodeSequenceOf or decodeSetOf function.
 """
+by("Dirk Lattermann")
 module de.dlkw.asn1 "0.0.1"
 {
     import ceylon.buffer "1.2.2";
