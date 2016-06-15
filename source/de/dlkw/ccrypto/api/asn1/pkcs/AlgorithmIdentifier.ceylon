@@ -17,7 +17,7 @@ import de.dlkw.ccrypto.asn1 {
     AnySwitchRegistry,
     Asn1Null,
     asn1Null,
-    Asn1Sequ
+    Asn1Sequence
 }
 
 """
@@ -33,7 +33,7 @@ import de.dlkw.ccrypto.asn1 {
    ```
    """
 shared class AlgorithmIdentifier<out Parameters = Asn1Value<Anything>>(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, [ObjectIdentifier, Parameters?] valu)
-        extends Asn1Sequ<[ObjectIdentifier, Parameters?]>(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, valu)
+        extends Asn1Sequence<[ObjectIdentifier, Parameters?]>(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, valu)
         given Parameters satisfies Asn1Value<Anything>
 {
     shared ObjectIdentifier objectIdentifier => val[0];

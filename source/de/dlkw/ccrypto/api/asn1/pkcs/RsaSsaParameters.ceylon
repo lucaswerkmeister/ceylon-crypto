@@ -17,7 +17,7 @@ import de.dlkw.ccrypto.asn1 {
     Asn1Null,
     SequenceDecoder,
     Asn1IntegerDecoder,
-    Asn1Sequ
+    Asn1Sequence
 }
 
 """
@@ -39,7 +39,7 @@ import de.dlkw.ccrypto.asn1 {
 """
 shared class RsaSsaParameters<out HashAlgIdParams = Asn1Value<Anything>, out MgfAlgIdParams = Asn1Value<Anything>>
         (encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, violatesDer, val)
-        extends Asn1Sequ<[TaggedValue<AlgorithmIdentifier<HashAlgIdParams>>, TaggedValue<AlgorithmIdentifier<MgfAlgIdParams>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>]>
+        extends Asn1Sequence<[TaggedValue<AlgorithmIdentifier<HashAlgIdParams>>, TaggedValue<AlgorithmIdentifier<MgfAlgIdParams>>, TaggedValue<Asn1Integer>, TaggedValue<Asn1Integer>]>
         (encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, val)
         given HashAlgIdParams satisfies Asn1Value<Anything>
         given MgfAlgIdParams satisfies Asn1Value<Anything>

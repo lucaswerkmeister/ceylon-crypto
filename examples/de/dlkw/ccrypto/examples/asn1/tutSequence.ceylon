@@ -15,7 +15,7 @@ import de.dlkw.ccrypto.asn1 {
     TaggedValueDecoder,
     hexdump,
     Asn1IntegerDecoder,
-    Asn1Sequ
+    Asn1Sequence
 }
 
 shared void tutSequence01()
@@ -26,7 +26,7 @@ shared void tutSequence01()
     print(seq.asn1String);
 }
 
-Asn1Sequ<Anything> seq01()
+Asn1Sequence<Anything> seq01()
 {
     value intVal = asn1Integer(5);
     value octetStringVal = octetString([160.byte, 192.byte]);
@@ -58,7 +58,7 @@ shared void tutSequence03()
     print(seq.asn1String);
 }
 
-Asn1Sequ<Anything> seq02()
+Asn1Sequence<Anything> seq02()
 {
     // with explicit tag
     value intVal1 = asn1Integer(7);
@@ -71,7 +71,7 @@ Asn1Sequ<Anything> seq02()
     return seq;
 }
 
-Asn1Sequ<Anything> seq02b()
+Asn1Sequence<Anything> seq02b()
 {
     value intVal2 = asn1Integer(9);
     value seq = asn1Sequence([null, intVal2], [Option.optional, Option.optional]);

@@ -8,7 +8,7 @@
    
    A specific custom ASN.1 type is typically implemented using this module by implementing
    1. an [[Asn1Value]] subclass, which will be most likely a subclass of
-   [[Asn1Sequ]], [[Asn1SequenceOf]] or [[Asn1SetOf]]
+   [[Asn1Sequence]], [[Asn1SequenceOf]] or [[Asn1SetOf]]
    2. an instance creating function taking some "basic" Ceylon types as input,
    encode them using instance creating functions of other ASN.1 types and delegating
    to the constructor of the class implemented in step 1.

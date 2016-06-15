@@ -25,7 +25,7 @@ import de.dlkw.ccrypto.asn1 {
     Descriptor,
     Asn1IntegerDecoder,
     Asn1WholeDecoder,
-    Asn1Sequ,
+    Asn1Sequence,
     Asn1Value
 }
 import de.dlkw.ccrypto.api.asn1.x509 {
@@ -44,7 +44,7 @@ shared class RsaPublicKeyImpl(exponent, modulus)
 }
 
 shared class Asn1RsaPublicKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, valu)
-        extends Asn1Sequ<[Asn1Whole, Asn1Whole]>(
+        extends Asn1Sequence<[Asn1Whole, Asn1Whole]>(
     encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, valu)
         satisfies RsaPublicKey
 {
@@ -138,7 +138,7 @@ shared class RsaCrtPrivateKeyImpl(p, q, dP, dQ, qInv)
 }
 
 shared class Asn1RsaPrivateKeyImpl(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
-        extends Asn1Sequ<[Asn1Integer, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole]>(
+        extends Asn1Sequence<[Asn1Integer, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole, Asn1Whole]>(
     encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
         satisfies RsaExponentPrivateKey & RsaCrtPrivateKey
 {

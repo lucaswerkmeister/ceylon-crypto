@@ -34,7 +34,7 @@ import de.dlkw.ccrypto.asn1 {
     ObjectIdentifierDecoder,
     Asn1IntegerDecoder,
     asn1Integer,
-    Asn1Sequ
+    Asn1Sequence
 }
 
 
@@ -206,7 +206,7 @@ shared void xpp()
         value sd1 = SequenceDecoder<GenericAsn1Value[4]>(
             [Descriptor((_)=>TaggedValueDecoder(Tag(0), SequenceDecoder<[ObjectIdentifier, Asn1Value<Anything>]>([Descriptor((_)=>ObjectIdentifierDecoder()), Descriptor((_)=>Asn1NullDecoder(), asn1Null())]))),
             Descriptor((_)=>TaggedValueDecoder(Tag(1),
-                SequenceDecoder<[ObjectIdentifier, Asn1Sequ<[ObjectIdentifier, Asn1Value<Anything>]>]>(
+                SequenceDecoder<[ObjectIdentifier, Asn1Sequence<[ObjectIdentifier, Asn1Value<Anything>]>]>(
                     [Descriptor((_)=>ObjectIdentifierDecoder()),
                      Descriptor((_)=>SequenceDecoder<[ObjectIdentifier, Asn1Value<Anything>]>(
                          [Descriptor((_)=>ObjectIdentifierDecoder()),

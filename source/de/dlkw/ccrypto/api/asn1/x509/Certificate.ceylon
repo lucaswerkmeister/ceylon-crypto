@@ -20,7 +20,7 @@ import de.dlkw.ccrypto.asn1 {
     UTCTime,
     ObjectIdentifier,
     Asn1Value,
-    Asn1Sequ,
+    Asn1Sequence,
     Asn1SequenceOf,
     Asn1SetOf,
     OctetString,
@@ -60,7 +60,7 @@ import ceylon.time.timezone {
 }
 
 shared class Certificate(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequ<[TBSCertificate, AlgorithmIdentifier<>, BitString]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Sequence<[TBSCertificate, AlgorithmIdentifier<>, BitString]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
 {
     Byte[] encoded;
     IdentityInfo identityInfo;
@@ -105,7 +105,7 @@ shared Certificate | EncodingError certificate(tbsCertificate, algorithmIdentifi
 }
 
 shared class TBSCertificate(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequ<[TaggedValue<Asn1Integer>, Asn1Integer, AlgorithmIdentifier<>, RDNSequence, Validity, RDNSequence, SubjectPublicKeyInfo<Asn1Value<Anything>>, BitString?, BitString?, TaggedValue<Extensions>?]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Sequence<[TaggedValue<Asn1Integer>, Asn1Integer, AlgorithmIdentifier<>, RDNSequence, Validity, RDNSequence, SubjectPublicKeyInfo<Asn1Value<Anything>>, BitString?, BitString?, TaggedValue<Extensions>?]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
 {
     Byte[] encoded;
     IdentityInfo identityInfo;
@@ -432,7 +432,7 @@ shared class RelativeDistinguishedNameDecoder(AlgorithmIdentifierAnySwitch anySw
 }
 
 shared class AttributeValueAssertion<out Parameters = Asn1Value<Anything>>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequ<[ObjectIdentifier, Parameters?]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Sequence<[ObjectIdentifier, Parameters?]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Parameters satisfies Asn1Value<Anything>
 {
     Byte[] encoded;
@@ -475,7 +475,7 @@ shared class AttributeValueAssertionDecoder<ValueType>(AlgorithmIdentifierAnySwi
 }
 
 shared class Validity(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequ<Time[2]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Sequence<Time[2]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
 {
     Byte[] encoded;
     IdentityInfo identityInfo;
@@ -585,7 +585,7 @@ shared class ValidityDecoder(Tag tag = UniversalTag.sequence)
 }
 
 shared class SubjectPublicKeyInfo<out P = Asn1Value<Anything>>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequ<[AlgorithmIdentifier<P>, BitString]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Sequence<[AlgorithmIdentifier<P>, BitString]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given P satisfies Asn1Value<Anything>
 {
     Byte[] encoded;
@@ -663,7 +663,7 @@ shared class ExtensionsDecoder(Tag tag = UniversalTag.sequence)
 }
 
 shared class Extension(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
-        extends Asn1Sequ<[ObjectIdentifier, Asn1Boolean, OctetString]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+        extends Asn1Sequence<[ObjectIdentifier, Asn1Boolean, OctetString]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
 {
     Byte[] encoded;
     IdentityInfo identityInfo;

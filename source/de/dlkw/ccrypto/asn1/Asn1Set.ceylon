@@ -30,7 +30,7 @@ shared class Asn1SetOf<Inner>(encoded, identityInfo, lengthOctetsOffset, content
     shared actual Tag defaultTag => UniversalTag.set;
 }
 
-shared class Asn1Sequ<out Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
+shared class Asn1Sequence<out Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         extends Asn1Value<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Types satisfies [GenericAsn1Value?+]
 {
