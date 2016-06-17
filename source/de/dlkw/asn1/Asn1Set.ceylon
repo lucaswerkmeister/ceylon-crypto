@@ -66,7 +66,7 @@ Comparison compareEncoded(Asn1Value<Anything> x, Asn1Value<Anything> y)
 
 """
    Using different tags on the elements might not make sense in ASN.1. I don't know now.
-   The attribute [[val]] will return the elements in the order of the DER encoding.
+   The attribute [[Asn1Value.val]] will return the elements in the order of the DER encoding.
 """
 shared Asn1SetOf<Inner> | EncodingError asn1SetOf<Inner>(Inner[] elements, Tag tag = UniversalTag.set)
         given Inner satisfies Asn1Value<Anything>
@@ -83,7 +83,7 @@ shared Asn1SetOf<Inner> | EncodingError asn1SetOf<Inner>(Inner[] elements, Tag t
 }
 
 """
-   The attribute [[val]] will return the elements in the order given in the [[elements]] parameter here,
+   The attribute [[Asn1Value.val]] will return the elements in the order given in the [[elements]] parameter here,
    *not* in the order of the DER encoding!
 """
 shared Asn1Set<Types> | EncodingError asn1Set<Types>(Types elements, [Asn1Value<Anything> | Option +] defaults, Tag tag = UniversalTag.set)

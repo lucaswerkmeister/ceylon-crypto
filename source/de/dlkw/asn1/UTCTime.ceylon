@@ -200,13 +200,3 @@ shared class UTCTimeDecoder(Integer latestYearRepresentable, Tag tag = Universal
         return [os, nextPos];
     }
 }
-
-shared void xxu()
-{
-    value t = utcTimeFromString("32100910", 1831);
-    if (is EncodingError t) {
-        print(t.message);
-        return;
-    }
-    print(t.val);
-}

@@ -1,4 +1,4 @@
-
+"ASN.1 INTEGER which is restricted to values representable in 4 octets. For a larger range, please use [[Asn1Whole]]."
 shared class Asn1Integer(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
         extends Asn1Value<Integer>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {

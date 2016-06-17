@@ -5,9 +5,6 @@ import ceylon.buffer.codec {
     EncodeException,
     DecodeException
 }
-import ceylon.whole {
-    Whole
-}
 
 "IA5String is treated like ASCII."
 shared class IA5String(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)

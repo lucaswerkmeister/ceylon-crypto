@@ -95,3 +95,13 @@ class UTCTimeTests()
 }
 
 // 00010100:00
+
+shared void xxu()
+{
+    value t = utcTimeFromString("32100910", 1831);
+    if (is EncodingError t) {
+        print(t.message);
+        return;
+    }
+    print(t.val);
+}

@@ -5,9 +5,6 @@ import ceylon.buffer.codec {
     EncodeException,
     DecodeException
 }
-import ceylon.whole {
-    Whole
-}
 
 shared class PrintableString(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
          extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
@@ -77,23 +74,4 @@ shared class PrintableStringDecoder(Tag tag = UniversalTag.printableString)
         value os = PrintableString(input[identityOctetsOffset .. nextPos - 1], identityInfo, lengthOctetsOffset - identityOctetsOffset, offset - identityOctetsOffset, violatesDer, string);
         return [os, nextPos];
     }
-}
-
-shared void xtrun()
-{
-    value x = printableString("56");
-    if (is EncodingError x) {
-        print(x.message);
-        return;
-    }
-    print(x.encoded);
-    print(x.asn1String);
-    
-    value y = PrintableStringDecoder().decode([19.byte, 1.byte, 34.byte]);
-    if (is DecodingError y) {
-        print(y.message);
-        return;
-    }
-    print(y[0].encoded);
-    print(y[0].asn1String);
 }
