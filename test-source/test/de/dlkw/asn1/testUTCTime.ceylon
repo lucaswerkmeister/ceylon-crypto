@@ -42,7 +42,7 @@ class UTCTimeTests()
                 ["00010100Z", [23.byte, 9.byte, 48.byte, 48.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte, 90.byte], false],
                 ["49010100Z", [23.byte, 9.byte, 52.byte, 57.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte, 90.byte], false],
                 ["50010100Z", [23.byte, 9.byte, 53.byte, 48.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte, 90.byte], false],
-                ["00010100.10", [23.byte, 8.byte, 48.byte, 48.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte], true]
+                ["00010100", [23.byte, 8.byte, 48.byte, 48.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte], true]
             };
             
             assertions = {
@@ -69,25 +69,25 @@ class UTCTimeTests()
             function when(String expected, Byte[] encoded, Boolean violatesDer)
             {
                 value decoded = decoder.decode(encoded);
-                return [decoded, expected];
+                return [decoded, expected, violatesDer];
             }
             
             examples = {
                 ["00010100Z", [23.byte, 9.byte, 48.byte, 48.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte, 90.byte], false],
                 ["49010100Z", [23.byte, 9.byte, 52.byte, 57.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte, 90.byte], false],
                 ["50010100Z", [23.byte, 9.byte, 53.byte, 48.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte, 90.byte], false],
-                ["00010100.10", [23.byte, 8.byte, 48.byte, 48.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte], true]
+                ["00010100", [23.byte, 8.byte, 48.byte, 48.byte, 48.byte, 49.byte, 48.byte, 49.byte, 48.byte, 48.byte], true]
             };
             
             assertions = {
-                ([UTCTime, Integer] | DecodingError decoded, String expected)
+                ([UTCTime, Integer] | DecodingError decoded, String expected, Boolean violatesDer)
                 {
                     value result = assertNotDecodingError(decoded);
                     value x = expect(result[0].val, sameAs(expected));
                     if (exists x) {
                         return x;
                     }
-                    return expect(result[0].violatesDer, sameAs(false));
+                    return expect(result[0].violatesDer, sameAs(violatesDer));
                 }
             };
         }

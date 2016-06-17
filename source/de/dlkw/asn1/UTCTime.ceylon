@@ -128,21 +128,21 @@ shared UTCTime | EncodingError utcTimeFromString(String stringValue, Integer lat
         if (p == ',') {
             violatesDer = true;
         }
-        assert (exists z = timePart.last);
-        if (p != 'Z') {
-            violatesDer = true;
-        }
+    }
+    assert (exists z = timePart.last);
+    if (z != 'Z') {
+        violatesDer = true;
     }
     
     value isoString = "``datePart``T``withCentury[8...]``";
     print(isoString);
     
     Boolean useZone;
-    if (exists c = withCentury.last, c == 'Z') {
+    if (exists c = isoString.last, c == 'Z') {
         useZone = true;
     }
     else {
-        useZone = withCentury.lastIndexWhere((c) => c in ['+', '-']) exists;
+        useZone = isoString.lastIndexWhere((c) => c in ['+', '-']) exists;
     }
     
     ZoneDateTime | DateTime zdt;

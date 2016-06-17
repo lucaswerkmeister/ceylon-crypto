@@ -76,6 +76,7 @@ shared class Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, co
     shared actual Tag defaultTag => UniversalTag.sequence;
 }
 
+// FIXME needs to check a match between the Types and the Asn1Values of the default values
 shared Asn1Sequence<Types> | EncodingError asn1Sequence<Types>(Types elements, [Asn1Value<Anything> | Option +] defaults, Tag tag = UniversalTag.sequence)
         given Types satisfies [Asn1Value<Anything>?+]
 {

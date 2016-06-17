@@ -73,8 +73,9 @@ void encodeSequenceWithDefault1a()
 test
 void encodeSequenceWithDefault1b()
 {
-    value expected = [ #30.byte, 8.byte,
+    value expected = [ #30.byte, 13.byte,
     2.byte, 3.byte, 1.byte, #86.byte, #9f.byte,
+    4.byte, 3.byte, 0.byte, 1.byte, 254.byte,
     6.byte, 1.byte, #2a.byte];
     value a1 = asn1Integer(99999);
     value a2 = octetString([0.byte, 1.byte, 254.byte]);
@@ -89,11 +90,7 @@ void encodeSequenceWithDefault1b()
 test
 void encodeSequenceWithDefault1c()
 {
-    value expected = [ #30.byte, 8.byte,
-    2.byte, 3.byte, 1.byte, #86.byte, #9f.byte,
-    6.byte, 1.byte, #2a.byte];
     value a1 = asn1Integer(99999);
-    value a2 = octetString([0.byte, 1.byte, 254.byte]);
     value a3 = objectIdentifier([1, 2]);
     value aa = asn1Sequence([a1, null, a3], [Option.mandatory, Option.mandatory, Option.mandatory]);
     assert (is EncodingError aa);
@@ -109,7 +106,7 @@ void encodeSequenceWithDefault1aExplicitTag()
     value a1 = asn1Integer(99999);
     value a2 = taggedValue(octetString([0.byte, 1.byte, 255.byte]), Tag(6));
     value a3 = objectIdentifier([1, 2]);
-    value aa = asn1Sequence([a1, a2, a3], [Option.mandatory, octetString([0.byte, 1.byte, #ff.byte]), Option.mandatory]);
+    value aa = asn1Sequence([a1, a2, a3], [Option.mandatory, taggedValue(octetString([0.byte, 1.byte, #ff.byte]), Tag(6)), Option.mandatory]);
     assert (!is EncodingError aa);
     print(hexdump(aa.encoded));
     print(aa.asn1String);
@@ -119,13 +116,14 @@ void encodeSequenceWithDefault1aExplicitTag()
 test
 void encodeSequenceWithDefault1bExplicitTag()
 {
-    value expected = [ #30.byte, 8.byte,
+    value expected = [ #30.byte, 15.byte,
     2.byte, 3.byte, 1.byte, #86.byte, #9f.byte,
+    #a6.byte, 5.byte, 4.byte, 3.byte, 0.byte, 1.byte, 254.byte,
     6.byte, 1.byte, #2a.byte];
     value a1 = asn1Integer(99999);
     value a2 = taggedValue(octetString([0.byte, 1.byte, 254.byte]), Tag(6));
     value a3 = objectIdentifier([1, 2]);
-    value aa = asn1Sequence([a1, a2, a3], [Option.mandatory, octetString([0.byte, 1.byte, #ff.byte]), Option.mandatory]);
+    value aa = asn1Sequence([a1, a2, a3], [Option.mandatory, taggedValue(octetString([0.byte, 1.byte, #ff.byte]), Tag(6)), Option.mandatory]);
     assert (!is EncodingError aa);
     print(hexdump(aa.encoded));
     print(aa.asn1String);

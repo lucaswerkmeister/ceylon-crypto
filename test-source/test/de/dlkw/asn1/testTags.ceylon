@@ -3,7 +3,8 @@ import ceylon.language.meta {
 }
 import ceylon.test {
     test,
-    testExecutor
+    testExecutor,
+    ignore
 }
 
 import com.athaydes.specks {
@@ -106,6 +107,7 @@ class TagsTests()
         }
     };
 
+    ignore("checking non-Exception throwables not yet supported by specks")
     test
     shared Specification testEncodeTagsFails() => Specification
     {

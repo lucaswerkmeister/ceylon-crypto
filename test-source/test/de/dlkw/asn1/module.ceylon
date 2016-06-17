@@ -1,4 +1,4 @@
-module test.de.dlkw.ccrypto.asn1 "1.0.0"
+module test.de.dlkw.asn1 "1.0.0"
 {
     import de.dlkw.ccrypto.api "0.0.2";
     

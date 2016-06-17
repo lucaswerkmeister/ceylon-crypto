@@ -43,7 +43,7 @@ class ValueTests()
             
             examples = {
                 //[[5.byte], [0.byte], []],
-                [[$1001_1111.byte, 50.byte], [$1000_0001.byte, 200.byte], []]
+                [[$1001_1111.byte, 50.byte], [$1000_0001.byte, 200.byte], [for (i in 0:200) i.byte]]
             };
             
             assertions = {
