@@ -6,6 +6,7 @@ import ceylon.buffer.codec {
     DecodeException
 }
 
+"Represents an ASN.1 PrintableString value."
 shared class PrintableString(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
          extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {

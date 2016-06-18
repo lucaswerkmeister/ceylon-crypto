@@ -18,6 +18,7 @@ import ceylon.time.timezone {
     zoneDateTime
 }
 
+"Represents an ASN.1 GeneralizedTime value."
 shared class GeneralizedTime(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu, dateTime)
         extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
@@ -27,6 +28,11 @@ shared class GeneralizedTime(encoded, identityInfo, lengthOctetsOffset, contentO
     Integer contentOctetsOffset;
     Boolean violatesDer;
     String valu;
+    
+    "The Ceylon time value corresponding to this GeneralizedTime.
+     
+     If the character string form contains a time zone, a [[ZoneDateTime]] will be
+     returned, if not, a [[DateTime]]."
     shared DateTime | ZoneDateTime dateTime;
 
     shared actual String asn1ValueString

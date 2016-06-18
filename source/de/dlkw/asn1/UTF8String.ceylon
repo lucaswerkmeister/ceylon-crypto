@@ -6,7 +6,7 @@ import ceylon.buffer.codec {
     DecodeException
 }
 
-"ASN.1 UTF8String is treated like ASCII."
+"Represents an ASN.1 UTF8String value."
 shared class UTF8String(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
         extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {

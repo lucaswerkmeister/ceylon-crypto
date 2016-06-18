@@ -1,3 +1,4 @@
+"Represents an ASN.1 value with an EXPLICIT tag (used in a SEQUENCE, SET or CHOICE)."
 shared class TaggedValue<out Type>(Byte[] encoded, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentOctetsOffset, Boolean violatesDer, Tag tag, Type wrapped)
         extends Asn1Value<Type>(encoded, identityInfo, lengthOctetsOffset,  contentOctetsOffset, violatesDer, wrapped)
         given Type satisfies GenericAsn1Value

@@ -1,5 +1,6 @@
 """
    A generic ASN.1 value with the information that can minimally be known without knowledge of its type's ASN.1 definition.
+   A GenericAsn1Value always stores the encoded form.
 """
 shared class GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer)
 {
@@ -58,7 +59,12 @@ shared class GenericAsn1ValueDecoder("The (IMPLICIT) tag that must be present in
     }
 }
 
-"Base class for an ASN.1 value whose type definition is known."
+"Base class for an ASN.1 value whose type definition is known.
+
+ This class can store a Ceylon value corresponding to the ASN.1 value,
+ but if that's not feasible (as for example in OCTET STRING: contents
+ possibly long but easy to decode), that Ceylon value may be calculated
+ on the fly from the encoding."
 shared abstract class Asn1Value<out Value>
         (encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, storedValue = null)
         extends GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer)
@@ -69,6 +75,9 @@ shared abstract class Asn1Value<out Value>
     Integer lengthOctetsOffset;
     Integer contentsOctetsOffset;
     Boolean violatesDer;
+    
+    "The Ceylon value corresponding to the ASN.1 value or null if no
+     Ceylon value is stored."
     Value? storedValue;
 
     "Subclasses must implement this if the decoded value is not stored in the instance
@@ -80,6 +89,9 @@ shared abstract class Asn1Value<out Value>
         // this error is thrown in subclasses that need to implement it and don't.
         throw AssertionError("decode() needs to be implemented in subclasses that don't store a decoded value!");
     }
+    
+    "The Ceylon value that is \"contained\" in this ASN.1 value.
+     If [[storedValue]] is null, it will be decoded each time it is accessed."
     shared Value val => storedValue else decode();
     
     "The tag that an instance of this class has when used without tag in

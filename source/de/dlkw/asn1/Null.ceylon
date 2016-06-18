@@ -1,3 +1,4 @@
+"Represents an ASN.1 NULL value."
 shared class Asn1Null(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer)
          extends Asn1Value<Null>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer)
 {

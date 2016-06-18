@@ -5,7 +5,7 @@ import ceylon.whole {
 }
 
 """
-   An ASN.1 INTEGER that can represent arbitrary large values
+   Represents an ASN.1 INTEGER value that can represent arbitrary large values
    using [[ceylon.whole::Whole]].
 """
 shared class Asn1Whole(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)

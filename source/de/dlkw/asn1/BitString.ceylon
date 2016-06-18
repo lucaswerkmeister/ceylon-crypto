@@ -1,6 +1,8 @@
 
 """
-   Parameter types are for octet string contents and number of bits.
+   Represents an ASN.1 BIT STRING value.
+   
+   Parameter types of the Asn1Value super class are for octet string contents and number of bits.
    The last octet in the octet string contents may contain unused bits.
 """
 shared class BitString(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, unusedBits)
@@ -11,9 +13,15 @@ shared class BitString(encoded, identityInfo, lengthOctetsOffset, contentOctetsO
     Integer lengthOctetsOffset;
     Integer contentOctetsOffset;
     Boolean violatesDer;
+    
+    "The number of unused bits in the last contents octet."
     shared Integer unusedBits;
 
+    "The bits in byte list form. In the last byte, only the 8-[[unusedBits]] most significant
+     bits are part of the bit string."
     shared Byte[] bytes => val[0];
+    
+    "The number of bits in this bit string."
     shared Integer numberOfBits => val[1];
     
     String bitdump(Byte[] val, Integer unusedBits)

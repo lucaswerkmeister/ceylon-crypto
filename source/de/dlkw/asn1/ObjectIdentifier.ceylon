@@ -1,4 +1,4 @@
-
+"Represents an ASN.1 OBJECT IDENTIFIER value."
 shared class ObjectIdentifier(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
          extends Asn1Value<[Integer*]>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
@@ -13,9 +13,17 @@ shared class ObjectIdentifier(encoded, identityInfo, lengthOctetsOffset, content
     shared actual String string => ".".join(val.map((x) => x.string));
     shared actual Tag defaultTag => UniversalTag.objectIdentifier;
     
-    shared ObjectIdentifier withTrailing(Integer last, Tag tag = UniversalTag.objectIdentifier)
+    "Creates a new ObjectIdentifier by appending another component to this ObjectIdentifier."
+    shared ObjectIdentifier withTrailing(trailing, tag = UniversalTag.objectIdentifier)
     {
-        return objectIdentifier(val.withTrailing(last), tag);
+        "The integer component that is appended to this object identifier."
+        Integer trailing;
+        
+        "The (IMPLICIT) tag that should be used in the encoding.
+         If omitted, the standard tag of class UNIVERSAL is used."
+        Tag tag;
+        
+        return objectIdentifier(val.withTrailing(trailing), tag);
     }
     
     shared actual Boolean equals(Object other)

@@ -16,6 +16,8 @@ import ceylon.time.iso8601 {
 import ceylon.buffer.codec {
     DecodeException
 }
+
+"Represents an ASN.1 UTCTime value."
 shared class UTCTime(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, valu, dateTime)
          extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset,  contentsOctetsOffset, violatesDer, valu)
 {
@@ -25,6 +27,11 @@ shared class UTCTime(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOf
     Integer contentsOctetsOffset;
     Boolean violatesDer;
     String valu;
+    
+    "The Ceylon time value corresponding to this UTCTime.
+     
+     If the character string form contains a time zone, a [[ZoneDateTime]] will be
+     returned, if not, a [[DateTime]]."
     shared DateTime | ZoneDateTime dateTime;
 
     

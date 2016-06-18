@@ -1,4 +1,4 @@
-
+"Represents an ASN.1 OCTET STRING value."
 shared class OctetString(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer)
          extends Asn1Value<Byte[]>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer)
 {

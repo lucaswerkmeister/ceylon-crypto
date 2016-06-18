@@ -1,4 +1,4 @@
-
+"Represents an ASN.1 BOOLEAN value."
 shared class Asn1Boolean(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
         extends Asn1Value<Boolean>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {

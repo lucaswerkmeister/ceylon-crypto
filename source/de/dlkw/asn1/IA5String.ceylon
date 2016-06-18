@@ -6,7 +6,10 @@ import ceylon.buffer.codec {
     DecodeException
 }
 
-"IA5String is treated like ASCII."
+"
+ Represent an ASN.1 IA5String value.
+ 
+ IA5String is treated like ASCII."
 shared class IA5String(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
         extends Asn1Value<String>(encoded, identityInfo, lengthOctetsOffset, contentOctetsOffset, violatesDer, valu)
 {
