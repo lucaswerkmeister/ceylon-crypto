@@ -13,9 +13,16 @@ shared class Asn1Boolean(encoded, identityInfo, lengthOctetsOffset, contentOctet
     shared actual Tag defaultTag => UniversalTag.boolean;
 }
 
-"Creates an ASN.1 BOOLEAN."
-shared Asn1Boolean asn1Boolean(Boolean val, Tag tag = UniversalTag.boolean)
+"Creates an Asn1Boolean."
+shared Asn1Boolean asn1Boolean(val, tag = UniversalTag.boolean)
 {
+    "The boolean value to represent as ASN.1 value."
+    Boolean val;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+    
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;

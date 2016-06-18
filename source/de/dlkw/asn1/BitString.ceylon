@@ -42,8 +42,26 @@ shared class BitString(encoded, identityInfo, lengthOctetsOffset, contentOctetsO
     shared actual Tag defaultTag => UniversalTag.bitString;
 }
 
-shared BitString | EncodingError bitStringFromBytes(Byte[] bytes, Integer numberOfBits = bytes.size * 8, Tag tag = UniversalTag.bitString)
+"""
+   Creates a BitString.
+"""
+shared BitString | EncodingError bitStringFromBytes(bytes, numberOfBits = bytes.size * 8, tag = UniversalTag.bitString)
 {
+    "The bits to create the bit string from.
+     
+     Bit 7 of bytes[0] is the first bit to put into the bit string, then come
+     bit 6 to bit 0, then bit 7 of bytes[1], and so on.
+     
+     Must have a size of (numberOfBits + 7) / 8."
+    Byte[] bytes;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+
+    "The length of the bit string, in bits."
+    Integer numberOfBits;
+    
     Integer unusedBits = bytes.size * 8 - numberOfBits;
     if (!(0 <= unusedBits < 8)) {
         return EncodingError("Wrong bytes sequence length ``bytes.size`` for ``numberOfBits`` bits");

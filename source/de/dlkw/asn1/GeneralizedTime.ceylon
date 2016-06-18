@@ -36,8 +36,16 @@ shared class GeneralizedTime(encoded, identityInfo, lengthOctetsOffset, contentO
     shared actual Tag defaultTag => UniversalTag.generalizedTime;
 }
 
-shared GeneralizedTime | EncodingError generalizedTimeFromInstant(Instant instant, Tag tag = UniversalTag.generalizedTime)
+"Creates a GeneralizedTime from an [[Instant]]."
+shared GeneralizedTime | EncodingError generalizedTimeFromInstant(instant, tag = UniversalTag.generalizedTime)
 {
+    "The instant to create a GeneralizedTime from."
+    Instant instant;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+    
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;
@@ -69,8 +77,24 @@ shared GeneralizedTime | EncodingError generalizedTimeFromInstant(Instant instan
     return GeneralizedTime(identityOctets.chain(encodedLength).chain(encodedString).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, stringValue.string, zoneDateTime);
 }
 
-shared GeneralizedTime | EncodingError generalizedTimeFromString(String stringValue, Tag tag = UniversalTag.generalizedTime)
+"Creates a GeneralizedTime from a [[String]]."
+shared GeneralizedTime | EncodingError generalizedTimeFromString(stringValue, tag = UniversalTag.generalizedTime)
 {
+    "The string to create a GeneralizedTime for.
+    
+     DER only allows
+     form YYYYMMDDhhmmss[.d]Z
+     where .d is decimal, arbitray precision, but no trailing zeroes nor dot.
+     
+    "
+    // FIXME correct support for all allowed string formats.
+    // FIXME should we support the non-DER formats here?
+    String stringValue;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;

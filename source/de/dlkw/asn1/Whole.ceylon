@@ -32,8 +32,16 @@ shared class Asn1Whole(encoded, identityInfo, lengthOctetsOffset, contentOctetsO
     shared actual Integer hash => val.hash;
 }
 
-shared Asn1Whole asn1Whole(Whole valu, Tag tag = UniversalTag.integer)
+"Creates an ASN.1 INTEGER value, implemented by [[Asn1Whole]]"
+shared Asn1Whole asn1Whole(valu, tag = UniversalTag.integer)
 {
+    "The integer value to represent as ASN.1 value."
+    Whole valu;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+    
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;

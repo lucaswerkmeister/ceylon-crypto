@@ -65,12 +65,23 @@ Comparison compareEncoded(Asn1Value<Anything> x, Asn1Value<Anything> y)
 }
 
 """
+   Creates an Asn1SetOf.
+   
    Using different tags on the elements might not make sense in ASN.1. I don't know now.
+   It is the user's responsibility that the elements all have the same tag, then.
+
    The attribute [[Asn1Value.val]] will return the elements in the order of the DER encoding.
 """
-shared Asn1SetOf<Inner> | EncodingError asn1SetOf<Inner>(Inner[] elements, Tag tag = UniversalTag.set)
+shared Asn1SetOf<Inner> | EncodingError asn1SetOf<Inner>(elements, tag = UniversalTag.set)
         given Inner satisfies Asn1Value<Anything>
 {
+    "The set components' values to repesent as ASN.1 value."
+    Inner[] elements;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+    
     value sorted = elements.sort(compareEncoded);
 
     value en = encodeAsn1Sequence(sorted, sorted.collect((_) => Option.mandatory), tag);
@@ -83,6 +94,9 @@ shared Asn1SetOf<Inner> | EncodingError asn1SetOf<Inner>(Inner[] elements, Tag t
 }
 
 """
+   Creates an Asn1Set. This is a difficult and confusing ASN.1 concept. Do not write
+   ASN.1 specifications that use SET, use SEQUENCE instead!
+   
    The attribute [[Asn1Value.val]] will return the elements in the order given in the [[elements]] parameter here,
    *not* in the order of the DER encoding!
 """

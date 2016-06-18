@@ -9,6 +9,7 @@ shared class Tag(tagNumber, tagClass = TagClass.contextSpecific)
     assert (tagNumber >= 0);
     
     shared actual String string => tagClass.string + " " + tagNumber.string;
+    "String representation that can be used in an ASN.1 listing. (Still in flux)"
     shared String asn1String => "[``if (tagClass == TagClass.contextSpecific) then tagNumber else " ".join({ tagClass, tagNumber })``]";
     
     "Two tags are equal if both their class and their number match."
@@ -38,26 +39,28 @@ shared class TagClass of universal | application | contextSpecific | private
     // workaround for Java backend bug in Ceylon 1.2.2, cannot directly use string.
     String s;
     
-    // class for the standard ASN.1 types
+    "class UNIVERSAL for the standard ASN.1 types"
     shared new universal
     {
         highBits => $00.byte.leftLogicalShift(6);
         s => "UNIVERSAL";
     }
-    
+
+    "class APPLICATION"
     shared new application
     {
         highBits => $01.byte.leftLogicalShift(6);
         s => "APPLICATION";
     }
     
-    // class normally used for tagging in SEQUENCEs, SETs, and CHOICE.
+    "class context specific, normally used for tagging in SEQUENCEs, SETs, and CHOICE."
     shared new contextSpecific
     {
         highBits => $10.byte.leftLogicalShift(6);
         s => "context-specific";
     }
-    
+
+    "class PRIVATE"
     shared new private
     {
         highBits => $11.byte.leftLogicalShift(6);
@@ -105,13 +108,17 @@ shared class IdentityInfo(tag, constructed)
     }
 }
 
-"Decodes the identity octets of an BER encoded ASN.1 value.
+"Decodes the identity octets of a BER encoded ASN.1 value.
  
  Returns identity octets information and pos of first octet after identity octets"
-shared [IdentityInfo, Integer] | DecodingError decodeIdentityOctets(
-    "The input containing the identity octets to decode." Byte[] input,
-    "Position in [[input]] where the identity octets start." Integer offset = 0)
+shared [IdentityInfo, Integer] | DecodingError decodeIdentityOctets(input, offset = 0)
 {
+    "The input containing the identity octets to decode."
+    Byte[] input;
+
+    "Position in [[input]] where the identity octets (that is, the ASN.1 value) start."
+    Integer offset;
+        
     assert (exists b0 = input[offset]);
     
     Byte tagClassBits = b0.and($1100_0000.byte);

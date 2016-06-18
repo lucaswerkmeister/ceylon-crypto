@@ -19,8 +19,13 @@ shared class Asn1Null(encoded, identityInfo, lengthOctetsOffset, contentOctetsOf
     shared actual Integer hash => 0;
 }
 
-shared Asn1Null asn1Null(Tag tag = UniversalTag.null)
+"Creates an Asn1Null value."
+shared Asn1Null asn1Null(tag = UniversalTag.null)
 {
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+    
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;

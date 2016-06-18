@@ -13,6 +13,7 @@ shared class OctetString(encoded, identityInfo, lengthOctetsOffset, contentOctet
     shared actual Tag defaultTag => UniversalTag.octetString;
 }
 
+"Creates an OctetString."
 shared OctetString octetString(variable Byte[] val, Tag tag = UniversalTag.octetString)
 {
     value identityInfo = IdentityInfo(tag, false);

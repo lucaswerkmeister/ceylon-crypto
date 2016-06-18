@@ -4,14 +4,39 @@ import ceylon.language.meta {
 
 // FIXME real ugly. Need to ascertain elements and defaults sequence elements are of same Asn1Value
 """
+   Encodes an ASN.1 SEQUENCE.
+   
    Returns the encoded octets, the identity octets info, the offset of the length octets in the encoded octets, and the the offset of the contents octets.
-   An optional element or an element with a DEFAULT value may be passed as null; in that case, it won't appear in the encoded output.
-   An element with a DEFAULT value which is passed as this default value won't appear in the encoded output either (as per the DER).
+
    If a mandatory element is not given (null), then an EncodingError is returned.
-    
 """
-shared [Byte[], IdentityInfo, Integer, Integer] | EncodingError encodeAsn1Sequence(Asn1Value<Anything>?[] elements, <Asn1Value<Anything> | Option>[] defaults, Tag tag)
+shared [Byte[], IdentityInfo, Integer, Integer] | EncodingError
+        encodeAsn1Sequence(elements, defaults, tag)
 {
+    "The elements to put into the sequence.
+     
+     An optional element or an element with a DEFAULT value may be passed as [[null]]; in that case, it won't appear in the encoded output.
+
+     An element with a DEFAULT value which is passed as this default value won't appear in the encoded output either (as per the DER).
+    "
+    Asn1Value<Anything>?[] elements;
+    
+    """
+       A list of default values or optional/mandatory indicators.
+       This list must have the same number of elements as the [[elements]] argument.
+       
+       Each defaults element can either be an [[Option]] value to indicate a mandatory
+       or an OPTIONAL sequence component; or it can be an Asn1Value,
+       in which case it must have the same type as the corresponding element in
+       the [[elements]] argument. In the latter case, it is used as the DEFAULT
+       value for the sequence component.
+    """
+    <Asn1Value<Anything> | Option>[] defaults;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+    
     value identityInfo = IdentityInfo(tag, true);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;
@@ -46,6 +71,12 @@ shared [Byte[], IdentityInfo, Integer, Integer] | EncodingError encodeAsn1Sequen
     return [identityOctets.chain(encodedLength).chain(contentOctets).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size];
 }
 
+"""
+   The [[Types]] components represent the individual components of the
+   ASN.1 SEQUENCE. Such a component may cover [[Null]]. This is used
+   if (and only if) the SEQUENCE component is OPTIONAL. A sequence instance
+   with an omitted optional component is represented as a [[null]] value.
+"""
 shared class Asn1Sequence<out Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         extends Asn1Value<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Types satisfies [GenericAsn1Value?+]
@@ -76,10 +107,38 @@ shared class Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, co
     shared actual Tag defaultTag => UniversalTag.sequence;
 }
 
+"""
+   Creates an Asn1Sequence.
+   
+   If an element with a default value is passed in as [[null]], then the default
+   value (and not null) will be returned in [[Asn1Sequence.val]]. 
+"""
 // FIXME needs to check a match between the Types and the Asn1Values of the default values
-shared Asn1Sequence<Types> | EncodingError asn1Sequence<Types>(Types elements, [Asn1Value<Anything> | Option +] defaults, Tag tag = UniversalTag.sequence)
+shared Asn1Sequence<Types> | EncodingError asn1Sequence<Types>(elements, defaults, tag = UniversalTag.sequence)
         given Types satisfies [Asn1Value<Anything>?+]
 {
+    "The elements to put into the sequence.
+    
+     An optional element or an element with a DEFAULT value may be passed as [[null]]; in that case, it won't appear in the encoded output.
+
+     An element with a DEFAULT value which is passed as this default value won't appear in the encoded output either (as per the DER)."
+    Types elements;
+    
+    """
+       A list of default values or optional/mandatory indicators.
+       This list must have the same number of elements as the [[elements]] argument.
+       
+       Each defaults element can either be an [[Option]] value to indicate a mandatory
+       or an OPTIONAL sequence component; or it can be an Asn1Value,
+       in which case it must have the same type as the corresponding element in
+       the [[elements]] argument.
+    """
+    [Asn1Value<Anything> | Option +] defaults;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+
     value res = encodeAsn1Sequence(elements, defaults, tag);
     if (is EncodingError res) {
         return res;
@@ -89,9 +148,22 @@ shared Asn1Sequence<Types> | EncodingError asn1Sequence<Types>(Types elements, [
     return Asn1Sequence<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, elements);
 }
 
-shared Asn1SequenceOf<Inner> asn1SequenceOf<Inner>(Inner[] elements, Tag tag = UniversalTag.sequence)
+"""
+   Creates an Asn1SequenceOf.
+   
+   Using different tags on the elements might not make sense in ASN.1. I don't know now.
+   It is the user's responsibility that the elements all have the same tag, then.
+   """
+shared Asn1SequenceOf<Inner> asn1SequenceOf<Inner>(elements, tag = UniversalTag.sequence)
         given Inner satisfies Asn1Value<Anything>
-        {
+{
+    "The sequence components' values to repesent as ASN.1 value."
+    Inner[] elements;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+    
     value en = encodeAsn1Sequence(elements, elements.collect((_) => Option.mandatory), tag);
     assert (!is EncodingError en);
     
@@ -99,11 +171,14 @@ shared Asn1SequenceOf<Inner> asn1SequenceOf<Inner>(Inner[] elements, Tag tag = U
     return Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, elements);
 }
 
-shared class Option of optional | mandatory
+"Enum class to indicate if a sequence/set value is mandatory or optional."
+shared class Option of mandatory | optional
 {
     String s;
-    shared new optional{s = "optional";}
+    ""
     shared new mandatory{s = "mandatory";}
+    ""
+    shared new optional{s = "optional";}
     shared actual String string => s;
 }
 

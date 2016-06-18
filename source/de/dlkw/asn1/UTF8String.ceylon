@@ -28,8 +28,12 @@ shared class UTF8String(encoded, identityInfo, lengthOctetsOffset, contentOctets
    character shall be encoded in the smallest number of octets  
    available for that character.")
 """
-shared UTF8String | EncodingError utf8String(String val, Tag tag = UniversalTag.utf8String)
+shared UTF8String | EncodingError utf8String(String val, tag = UniversalTag.utf8String)
 {
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;

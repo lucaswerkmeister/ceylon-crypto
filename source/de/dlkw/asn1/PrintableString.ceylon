@@ -20,8 +20,19 @@ shared class PrintableString(encoded, identityInfo, lengthOctetsOffset, contentO
     shared actual Tag defaultTag => UniversalTag.printableString;
 }
 
-shared PrintableString | EncodingError printableString(String val, Tag tag = UniversalTag.printableString)
+"
+ Creates an ASN.1 PrintableString. Returns an error if [[val]] contains a character
+ that is not allowed.
+ "
+shared PrintableString | EncodingError printableString(val, tag = UniversalTag.printableString)
 {
+    "Allowed characters are: A-Z, a-z, 0-9, '()+,-./:=?, and space."
+    String val;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;

@@ -35,8 +35,16 @@ shared class UTCTime(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOf
     shared actual Tag defaultTag = UniversalTag.utcTime;
 }
 
-shared UTCTime | EncodingError utcTimeFromInstant(Instant instant, Tag tag = UniversalTag.utcTime)
+"Creates a UTCTime from an [[Instant]]."
+shared UTCTime | EncodingError utcTimeFromInstant(instant, tag = UniversalTag.utcTime)
 {
+    "The instant to create a UTCTime from."
+    Instant instant;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;
@@ -68,8 +76,39 @@ shared UTCTime | EncodingError utcTimeFromInstant(Instant instant, Tag tag = Uni
     return UTCTime(identityOctets.chain(encodedLength).chain(encodedString).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, stringValue.string, zoneDateTime);
 }
 
-shared UTCTime | EncodingError utcTimeFromString(String stringValue, Integer latestYearRepresentable, Tag tag = UniversalTag.utcTime)
+"Creates a UTCTime from a [[String]].
+ 
+ As the UTCTime class internally contains an [[Instant]] to represent the encoded
+ point in time, the two-digit year part of the string must be interpreted as
+ belonging to a specific century. Two-digit year values are rather useless if
+ that is not done."
+shared UTCTime | EncodingError utcTimeFromString(stringValue, latestYearRepresentable, tag = UniversalTag.utcTime)
 {
+    "The string to create a UTCTime for.
+     
+     DER only allows
+     form YYMMDDhhmmss[.d]Z
+     where .d is decimal, arbitray precision, but no trailing zeroes nor dot.
+     
+     "
+    // FIXME correct support for all allowed string formats.
+    // FIXME should we support the non-DER formats here?
+    String stringValue;
+    
+    "Determines how the two-digit year is interpreted.
+     
+     For example, if latestYearRepresentable == 2049,
+     then 
+     * \"50\" means 1950,
+     * \"99\" means 1999,
+     * \"00\" means 2000,
+     * \"49\" means 2049."
+    Integer latestYearRepresentable;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+    
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;

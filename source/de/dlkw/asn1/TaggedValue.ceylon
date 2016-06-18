@@ -8,9 +8,16 @@ shared class TaggedValue<out Type>(Byte[] encoded, IdentityInfo identityInfo, In
     
 }
 
-shared TaggedValue<Type> taggedValue<Type>(Type wrapped, Tag tag)
+"Creates a TaggedValue, wrapping an ASN.1 value with an explicit tag."
+shared TaggedValue<Type> taggedValue<Type>(wrapped, tag)
         given Type satisfies GenericAsn1Value
 {
+    "The ASN.1 value that shall be explictly tagged."
+    Type wrapped;
+    
+    "The tag to use as explicit tag for the value."
+    Tag tag;
+    
     value identityInfo = IdentityInfo(tag, true);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;

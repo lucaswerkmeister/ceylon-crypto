@@ -27,14 +27,20 @@ shared class GenericAsn1Value(encoded, identityInfo, lengthOctetsOffset, content
     // DER can be violated in the encoding of the length!
     shared Boolean violatesDer;
     
+    "A Byte sequence consisting of the BER identity octets of this ASN.1 value"
     shared Byte[] identityOctets => encoded[...lengthOctetsOffset - 1];
+    "A Byte sequence consisting of the BER length octets of this ASN.1 value"
     shared Byte[] lengthOctets => encoded[lengthOctetsOffset .. contentsOctetsOffset - 1];
+    "A Byte sequence consisting of the BER contents octets of this ASN.1 value"
     shared Byte[] contentsOctets => encoded[contentsOctetsOffset...];
     
     "Convenience access to the tag of this value, stored in the [[identityInfo]]."
     shared Tag tag => identityInfo.tag;
     
+    "String representation that can be used in an ASN.1 listing. (Still in flux)"
+    // FIXME correct this. Determine what to produce here.
     shared default String asn1String => "``identityInfo.tag.asn1String`` ``asn1ValueString``";
+    "still not decided when to output what"
     shared default String asn1ValueString => "generic contents ``hexdump(contentsOctets)``";
     
     shared actual default String string => "``identityInfo.tag.asn1String`` ``hexdump(contentsOctets)``";
@@ -65,12 +71,19 @@ shared abstract class Asn1Value<out Value>
     Boolean violatesDer;
     Value? storedValue;
 
+    "Subclasses must implement this if the decoded value is not stored in the instance
+     and thus must be decoded each time [[val]] is called.
+     
+     If the decoded value is stored in the instance, then this method need not be
+     refined."
     shared default Value decode(){
         // this error is thrown in subclasses that need to implement it and don't.
         throw AssertionError("decode() needs to be implemented in subclasses that don't store a decoded value!");
     }
     shared Value val => storedValue else decode();
     
+    "The tag that an instance of this class has when used without tag in
+     a specification."
     shared formal Tag defaultTag;
     shared default actual String asn1String
     {

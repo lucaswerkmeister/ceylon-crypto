@@ -29,8 +29,16 @@ shared class ObjectIdentifier(encoded, identityInfo, lengthOctetsOffset, content
     shared actual Integer hash => val.hash;
 }
 
-shared ObjectIdentifier objectIdentifier([Integer*] parts, Tag tag = UniversalTag.objectIdentifier)
+"Creates an ObjectIdentifier."
+shared ObjectIdentifier objectIdentifier(parts, tag = UniversalTag.objectIdentifier)
 {
+    "The parts (between the dots) of the OID as Integers."
+    [Integer*] parts;
+    
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+    
     value identityInfo = IdentityInfo(tag, false);
     value identityOctets = identityInfo.encoded;
     value lengthOctetsOffset = identityOctets.size;

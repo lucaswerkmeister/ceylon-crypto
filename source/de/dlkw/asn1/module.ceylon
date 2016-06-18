@@ -1,10 +1,13 @@
 """
-   This module contains support to encode and decode ASN.1 values using
-   ---with some restrictions---the BER
-   (*basic encoding rules*) for decoding and the DER (*distinguished encoding rules*,
-   a canonical restriction of the BER)
-   for encoding. If decoding detects a violation of the DER, the [[GenericAsn1Value.violatesDer]]
-   flag is set on the decoded value.
+   This module contains support to encode and decode ASN.1 values.
+   
+   * Encoding is done using the DER (distinguished encoding rules)
+   to ensure a unique encoded represenation.
+   
+   * Decoding is done using the BER to accept a wider range of input.
+   If the data to encode is not in canonical form (that is, if it
+   violates the DER, that is signalled via the [[GenericAsn1Value.violatesDer]]
+   flag on the decoded object.
    
    A specific custom ASN.1 type is typically implemented using this module by implementing
    1. an [[Asn1Value]] subclass, which will be most likely a subclass of

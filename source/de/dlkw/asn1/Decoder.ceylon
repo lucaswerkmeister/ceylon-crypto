@@ -2,9 +2,18 @@ shared class DecodingError(shared Integer offset, shared String? message = null)
 {}
 
 
-"length, pos of first octet after length octets, DER was violated"
-shared [Integer, Integer, Boolean] | DecodingError decodeLengthOctets(Byte[] input, Integer offset)
+"Decodes the length octets of a BER encoded ASN.1 value.
+ 
+ Returns the decoded length, the position of the first octet in [[input]] after the
+ length octets, and a flag if the DER were violated."
+shared [Integer, Integer, Boolean] | DecodingError decodeLengthOctets(input, offset)
 {
+    "The input containing the length octets to decode."
+    Byte[] input;
+    
+    "Position in [[input]] where the length octets start."
+    Integer offset;
+    
     assert (exists length0 = input[offset]);
     if (length0.get(7)) {
         variable Boolean violatesDer = false;
@@ -50,10 +59,17 @@ shared abstract class Decoder<out Asn1Type>("The (IMPLICIT) tag that must be pre
         return true;
     }
     
-    "Decodes an ASN.1 value, returning the value and the offset of the next ASN.1 value in [[input]]."
-    shared [Asn1Type, Integer] | DecodingError decode("The input to decode. Must be encoded according to the BER." Byte[] input,
-        "The offset in [[input]] of the start of the ASN.1 value to decode---the first (or only) identity octet." Integer offset = 0)
+    "Decodes an ASN.1 value, returning the value and the offset of the next ASN.1 value in [[input]].
+     
+     This method decodes the identity octets, then delegates to [[decodeGivenTag]]."
+    shared [Asn1Type, Integer] | DecodingError decode(input, offset = 0)
     {
+        "The input to decode. Must be encoded according to the BER."
+        Byte[] input;
+        
+        "The offset in [[input]] of the start of the ASN.1 value to decode---the first (or only) identity octet."
+        Integer offset;
+                
         variable Boolean violatesDer = false;
         
         value res0 = decodeIdentityOctets(input, offset);
@@ -69,6 +85,9 @@ shared abstract class Decoder<out Asn1Type>("The (IMPLICIT) tag that must be pre
         return decodeGivenTag(input, lengthAndContentStart, identityOctets, offset, violatesDer);
     }
 
+    "Decodes the length and contents octets of an ASN.1 value, after the identity octets already have been decoded.
+     
+     This method decodes the length octets, then delegates to [[decodeGivenTagAndLength]]."
     shared [Asn1Type, Integer] | DecodingError decodeGivenTag(input, offset, identityInfo, identityOctetsOffset, violatesDer)
     {
         "The input to decode. Must be encoded according to the BER (without identity octets)."
