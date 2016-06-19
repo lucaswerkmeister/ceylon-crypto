@@ -34,6 +34,7 @@ shared Asn1Null asn1Null(tag = UniversalTag.null)
     return Asn1Null(identityOctets.withTrailing(0.byte), identityInfo, lengthOctetsOffset, lengthOctetsOffset + 1, false);
 }
 
+"Decodes NULL."
 shared class Asn1NullDecoder(Tag tag = UniversalTag.null)
         extends Decoder<Asn1Null>(tag)
 {

@@ -214,9 +214,20 @@ shared UTCTime | EncodingError utcTimeFromString(stringValue, latestYearRepresen
     return [encodedString, zdt, violatesDer];
 }
 
-shared class UTCTimeDecoder(Integer latestYearRepresentable, Tag tag = UniversalTag.utcTime)
+"Decodes UTCTime."
+shared class UTCTimeDecoder(latestYearRepresentable, Tag tag = UniversalTag.utcTime)
         extends Decoder<UTCTime>(tag)
 {
+    "Determines how the two-digit year is interpreted.
+     
+     For example, if latestYearRepresentable == 2049,
+     then 
+     * \"50\" means 1950,
+     * \"99\" means 1999,
+     * \"00\" means 2000,
+     * \"49\" means 2049."
+    Integer latestYearRepresentable;
+    
     shared actual [UTCTime, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
         Integer nextPos = offset + length;

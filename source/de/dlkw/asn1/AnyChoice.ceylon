@@ -45,6 +45,10 @@ shared abstract class AnySwitchRegistry(Map<ObjectIdentifier, Decoder<Asn1Value<
     }
 }
 
+"Decodes CHOICE.
+ 
+ Type parameter [[Þ]] is supposed to be the union type of all
+ possible alternatives of the CHOICE."
 shared class ChoiceDecoder<P>(decoders)
         extends Decoder<P>(null)
         given P satisfies Asn1Value<Anything>
@@ -54,6 +58,8 @@ shared class ChoiceDecoder<P>(decoders)
         assert (exists x = decoder.tag);
     }
     
+    "Decodes a CHOICE by using the first decoder in [[decoders]] whose tag matches the
+     tag of the encoded value."
     shared actual [P, Integer]|DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, Boolean violatesDer)
     {
         for (decoder in decoders) {

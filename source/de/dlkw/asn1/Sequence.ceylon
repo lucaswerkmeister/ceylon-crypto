@@ -72,7 +72,9 @@ shared [Byte[], IdentityInfo, Integer, Integer] | EncodingError
 }
 
 """
-   The [[Types]] components represent the individual components of the
+   Represents an ASN.1 SEQUENCE value.
+   
+   The [[Types]] parameter defines the types the individual components of the
    ASN.1 SEQUENCE. Such a component may cover [[Null]]. This is used
    if (and only if) the SEQUENCE component is OPTIONAL. A sequence instance
    with an omitted optional component is represented as a [[null]] value.
@@ -92,6 +94,7 @@ shared class Asn1Sequence<out Types>(encoded, identityInfo, lengthOctetsOffset, 
     shared actual Tag defaultTag => UniversalTag.sequence;
 }
 
+"Represents an ASN.1 SEQUENCE OF value."
 shared class Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         extends Asn1Value<Inner[]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Inner satisfies Asn1Value<Anything>
@@ -101,6 +104,7 @@ shared class Asn1SequenceOf<Inner>(encoded, identityInfo, lengthOctetsOffset, co
     Integer lengthOctetsOffset;
     Integer contentsOctetsOffset;
     Boolean violatesDer;
+    "The components of this SEQUENCE OF."
     Inner[] elements;
     
     shared actual String asn1ValueString => "SEQUENCE OF { ``" ".join(val.map((x)=>x.asn1String))`` }";
@@ -175,22 +179,30 @@ shared Asn1SequenceOf<Inner> asn1SequenceOf<Inner>(elements, tag = UniversalTag.
 shared class Option of mandatory | optional
 {
     String s;
-    ""
     shared new mandatory{s = "mandatory";}
-    ""
     shared new optional{s = "optional";}
     shared actual String string => s;
 }
 
+"Describes the definition of a SEQUENCE or SET component. Needed because
+ not all information is available in the decoders used."
 shared class Descriptor<out Element>(decoder, default = Option.mandatory)
 given Element satisfies GenericAsn1Value
 {
+    "Returns a decoder to use for a SEQUENCE or SET component. For most components,
+     this will be a constant function, but for components of type ANY, the decoder
+     needs to be selected according to the previously decoded components."
     shared <Decoder<Element>|DecodingError>(GenericAsn1Value?[]) decoder;
+    
+    "Indicates if the component is mandatory or optional, or the
+     DEFAULT value of the component if it has one."
     shared Element|Option default;
     
     shared actual String string => "descriptor with ``decoder``, default ``default``";
 }
 
+"Decodes a SEQUENCE without knowing the ASN.1 specification for it."
+// FIXME probably buggy. need to check (type parameter of Decoder?)
 shared class GenericSequenceDecoder(Tag tag = UniversalTag.sequence)
         extends Decoder<Asn1Sequence<Anything>>(tag)
 {
@@ -242,10 +254,15 @@ shared class GenericSequenceDecoder(Tag tag = UniversalTag.sequence)
     }
 }
 
+"Decodes SEQUENCE."
 shared class SequenceDecoder<out Types>(els, Tag tag = UniversalTag.sequence)
         extends Decoder<Asn1Sequence<Types>>(tag)
         given Types satisfies [GenericAsn1Value?+]
 {
+    "Descriptors for decoding of each of the SEQUENCE's components.
+     
+     The type argument of each descriptor must match the type in the same
+     position of the [[Types]] argument."
     Descriptor<GenericAsn1Value>[] els;
     
     shared default actual [Asn1Sequence<Types>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer contentStart, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
@@ -346,17 +363,25 @@ shared class SequenceDecoder<out Types>(els, Tag tag = UniversalTag.sequence)
     }
 }
 
-shared class SequenceOfDecoder<Inner>(innerDecoder, Tag tag = UniversalTag.sequence)
+"Decodes SEQUENCE OF."
+shared class SequenceOfDecoder<Inner>(innerDecoder, tag = UniversalTag.sequence)
         extends Decoder<Asn1SequenceOf<Inner>>(tag)
         given Inner satisfies Asn1Value<Anything>
-        {
+{
+    "The decoder to use for the SEQUENCE OF components."
     Decoder<Inner> innerDecoder;
-    
+
+    "The (IMPLICIT) tag that should be used in the encoding.
+     If omitted, the standard tag of class UNIVERSAL is used."
+    Tag tag;
+
     shared default actual [Asn1SequenceOf<Inner>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer contentStart, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
         variable Inner[] tmpResult = [];
         
         variable Integer startPos = contentStart;
+        // FIXME can this be simplified by using innerDecoder.decode()?
+        
         while (startPos < contentStart + length) {
             value res0 = decodeIdentityOctets(input, startPos);
             if (is DecodingError res0) {

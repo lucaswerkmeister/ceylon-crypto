@@ -73,6 +73,8 @@ shared Asn1Integer asn1Integer(valu, tag = UniversalTag.integer)
     return Asn1Integer(identityOctets.chain(encodedLength).chain(encoded).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, valu);
 }
 
+"Decodes INTEGER to an [[Asn1Integer]]. Returns an error if the value is not representable in 4 bytes,
+ (or if the encoding is invalid)."
 shared class Asn1IntegerDecoder(Tag tag = UniversalTag.integer)
         extends Decoder<Asn1Integer>(tag)
 {

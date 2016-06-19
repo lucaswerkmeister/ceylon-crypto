@@ -23,6 +23,7 @@ shared OctetString octetString(variable Byte[] val, Tag tag = UniversalTag.octet
     return OctetString(identityOctets.chain(encodedLength).chain(val).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false);
 }
 
+"Decodes OCTET STRING."
 shared class OctetStringDecoder(Tag tag = UniversalTag.octetString)
         extends Decoder<OctetString>(tag)
 {

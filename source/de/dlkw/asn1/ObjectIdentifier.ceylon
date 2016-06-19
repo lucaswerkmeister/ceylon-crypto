@@ -79,6 +79,7 @@ shared ObjectIdentifier objectIdentifier(parts, tag = UniversalTag.objectIdentif
     return ObjectIdentifier(identityOctets.chain(encodedLength).chain(encoded).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, parts);
 }
 
+"Decodes OBJECT IDENTIFIER."
 shared class ObjectIdentifierDecoder(Tag tag = UniversalTag.objectIdentifier)
         extends Decoder<ObjectIdentifier>(tag)
 {

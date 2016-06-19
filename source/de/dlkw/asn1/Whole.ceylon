@@ -81,6 +81,7 @@ shared Asn1Whole asn1Whole(valu, tag = UniversalTag.integer)
     return Asn1Whole(identityOctets.chain(encodedLength).chain(encoded).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, valu);
 }
 
+"Decodes INTEGER to an [[Asn1Whole]]."
 shared class Asn1WholeDecoder(Tag tag = UniversalTag.integer)
         extends Decoder<Asn1Whole>(tag)
 {

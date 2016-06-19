@@ -50,7 +50,9 @@ shared UTF8String | EncodingError utf8String(String val, tag = UniversalTag.utf8
 }
 
 "
- Decodes an ASN.1 UTF8String. Returns an error if the contents contains octets that are
+ Decodes UTF8String.
+ 
+ Returns an error if the contents contains octets that are
  not a valid UTF-8 sequence.
 "
 shared class UTF8StringDecoder(Tag tag = UniversalTag.utf8String)

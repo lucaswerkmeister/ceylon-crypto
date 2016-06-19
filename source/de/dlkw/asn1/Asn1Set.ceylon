@@ -1,5 +1,11 @@
+"Represents an ASN.1 SET value. This is not yet supported, and a Decoder for
+ SET is missing.
 
-
+ The [[Types]] parameter defines the types the individual components of the
+ ASN.1 SET. Such a component may cover [[Null]]. This is used
+ if (and only if) the SEQUENCE component is OPTIONAL. A sequence instance
+ with an omitted optional component is represented as a [[null]] value.
+"
 shared class Asn1Set<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         extends Asn1Value<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Types satisfies [Asn1Value<Anything>?+]
@@ -15,6 +21,7 @@ shared class Asn1Set<Types>(encoded, identityInfo, lengthOctetsOffset, contentsO
     shared actual Tag defaultTag => UniversalTag.set;
 }
 
+"Represents an ASN.1 SET OF value."
 shared class Asn1SetOf<Inner>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         extends Asn1Value<Inner[]>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, violatesDer, elements)
         given Inner satisfies Asn1Value<Anything>
@@ -24,6 +31,7 @@ shared class Asn1SetOf<Inner>(encoded, identityInfo, lengthOctetsOffset, content
     Integer lengthOctetsOffset;
     Integer contentsOctetsOffset;
     Boolean violatesDer;
+    "The components of this SET OF."
     Inner[] elements;
 
     shared actual String asn1ValueString => "SET OF { ``" ".join(val.map((x)=>x.asn1String))`` }";
@@ -95,7 +103,8 @@ shared Asn1SetOf<Inner> | EncodingError asn1SetOf<Inner>(elements, tag = Univers
 
 """
    Creates an Asn1Set. This is a difficult and confusing ASN.1 concept. Do not write
-   ASN.1 specifications that use SET, use SEQUENCE instead!
+   ASN.1 specifications that use SET, use SEQUENCE instead! Decoding is not yet
+   supported.
    
    The attribute [[Asn1Value.val]] will return the elements in the order given in the [[elements]] parameter here,
    *not* in the order of the DER encoding!
@@ -116,10 +125,12 @@ shared Asn1Set<Types> | EncodingError asn1Set<Types>(Types elements, [Asn1Value<
     return Asn1Set<Types>(encoded, identityInfo, lengthOctetsOffset, contentsOctetsOffset, false, elements);
 }
 
+"Decodes a SET OF."
 shared class SetOfDecoder<Inner>(innerDecoder, Tag tag = UniversalTag.set)
         extends Decoder<Asn1SetOf<Inner>>(tag)
         given Inner satisfies Asn1Value<Anything>
 {
+    "The decoder to use for the SET OF components."
     Decoder<Inner> innerDecoder;
     
     shared default actual [Asn1SetOf<Inner>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer contentStart, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)

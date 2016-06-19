@@ -1,5 +1,13 @@
-shared class DecodingError(shared Integer offset, shared String? message = null)
-{}
+"Returned if an error occured while decoding."
+shared class DecodingError(offset, message = null)
+{
+    "The offset in the input where the error occured, as best as it is
+     possible to tell."
+    shared Integer offset;
+
+    "A description of the error."
+    shared String? message;
+}
 
 
 "Decodes the length octets of a BER encoded ASN.1 value.
@@ -48,9 +56,15 @@ shared [Integer, Integer, Boolean] | DecodingError decodeLengthOctets(input, off
 """
    A decoder for an ASN.1 type.
 """
-shared abstract class Decoder<out Asn1Type>("The (IMPLICIT) tag that must be present in the encoding, or null if any tag should be accepted." shared Tag? tag)
+shared abstract class Decoder<out Asn1Type>(tag)
         given Asn1Type satisfies GenericAsn1Value
 {
+    "The (IMPLICIT) tag that must be present in the encoding,
+     or null if any tag should be accepted."
+    shared Tag? tag;
+    
+    "Checks if the passed in otherTag matches the tag in this decoder.
+     That means it returns true also if this is a \"matches any tag\" decoder."
     shared Boolean tagMatch(Tag otherTag)
     {
         if (exists tag) {
@@ -144,6 +158,8 @@ shared abstract class Decoder<out Asn1Type>("The (IMPLICIT) tag that must be pre
     );
 }
 
+"An experimental helper decoder that does calculation and return of the next position value.
+ It is questionable if that is really of much use."
 shared abstract class StdDecoder<Asn1Type>(Tag tag)
         extends Decoder<Asn1Type>(tag)
         given Asn1Type satisfies Asn1Value<Anything>
@@ -171,5 +187,7 @@ shared abstract class StdDecoder<Asn1Type>(Tag tag)
         return [decoded, nextPos];
     }
     
+    "Decode and return only the contents. But to return a good DecodingError,
+     otherwise useless offset info must be passed."
     shared formal Asn1Type | DecodingError decodeContents(Byte[] contents, IdentityInfo identityInfo, Integer lengthOctetsOffset, Integer contentsOctetsOffset);
 }

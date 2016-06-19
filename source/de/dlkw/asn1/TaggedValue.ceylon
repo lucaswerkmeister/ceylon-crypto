@@ -27,10 +27,17 @@ shared TaggedValue<Type> taggedValue<Type>(wrapped, tag)
     return TaggedValue(encoded, identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, tag, wrapped);
 }
 
-shared class TaggedValueDecoder<Type>(Tag tag, Decoder<Type> innerDecoder)
+"Decodes an ASN.1 value with an EXPLICIT tag."
+shared class TaggedValueDecoder<Type>(tag, innerDecoder)
         extends Decoder<TaggedValue<Type>>(tag)
         given Type satisfies GenericAsn1Value
 {
+    "The EXPLICIT tag to look for."
+    Tag tag;
+    
+    "The decoder of the wrapped value."
+    Decoder<Type> innerDecoder;
+
     shared actual [TaggedValue<Type>, Integer] | DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {
         if (!identityInfo.constructed) {

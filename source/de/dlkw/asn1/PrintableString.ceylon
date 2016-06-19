@@ -56,6 +56,7 @@ shared PrintableString | EncodingError printableString(val, tag = UniversalTag.p
     return PrintableString(identityOctets.chain(encodedLength).chain(encodedString).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, val);
 }
 
+"Decodes PrintableString."
 shared class PrintableStringDecoder(Tag tag = UniversalTag.printableString)
         extends Decoder<PrintableString>(tag)
 {

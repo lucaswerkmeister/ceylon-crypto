@@ -644,8 +644,7 @@ shared class Extensions(encoded, identityInfo, lengthOctetsOffset, contentsOctet
 shared class ExtensionsDecoder(Tag tag = UniversalTag.sequence)
         extends Decoder<Extensions>(tag)
 {
-    value delegate = SequenceOfDecoder<Extension>
-            (ExtensionDecoder());
+    value delegate = SequenceOfDecoder<Extension>(ExtensionDecoder());
     
     shared actual [Extensions, Integer]|DecodingError decodeGivenTagAndLength(Byte[] input, Integer offset, IdentityInfo identityInfo, Integer length, Integer identityOctetsOffset, Integer lengthOctetsOffset, variable Boolean violatesDer)
     {

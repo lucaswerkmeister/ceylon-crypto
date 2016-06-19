@@ -45,7 +45,7 @@ shared IA5String | EncodingError ia5String(String val, Tag tag = UniversalTag.ia
 }
 
 "
- Decodes an ASN.1 IA5String. Returns an error if the contents contains octets that are
+ Decodes IA5String. Returns an error if the contents contains octets that are
  not ASCII values, that is, if they larger than 127.
 "
 shared class IA5StringDecoder(Tag tag = UniversalTag.ia5String)

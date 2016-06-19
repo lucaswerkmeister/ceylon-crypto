@@ -95,6 +95,7 @@ shared BitString | EncodingError bitStringFromBytes(bytes, numberOfBits = bytes.
     return BitString(identityOctets.chain(encodedLength).chain(val).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, unusedBits);
 }
 
+"Decodes BIT STRING."
 shared class BitStringDecoder(Tag tag = UniversalTag.bitString)
         extends Decoder<BitString>(tag)
 {

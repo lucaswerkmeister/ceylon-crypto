@@ -149,6 +149,7 @@ shared GeneralizedTime | EncodingError generalizedTimeFromString(stringValue, ta
     return GeneralizedTime(identityOctets.chain(encodedLength).chain(encodedString).sequence(), identityInfo, lengthOctetsOffset, lengthOctetsOffset + encodedLength.size, false, stringValue, zdt);
 }
 
+"Decodes GeneralizedTime."
 shared class GeneralizedTimeDecoder(Tag tag = UniversalTag.generalizedTime)
         extends Decoder<GeneralizedTime>(tag)
 {

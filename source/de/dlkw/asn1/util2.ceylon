@@ -31,8 +31,12 @@ shared class UniversalTag extends Tag
     shared new generalizedTime  extends tag(24){}
 }
 
-shared class EncodingError(shared String? message = null)
-{}
+"Returned if an error occured while encoding."
+shared class EncodingError(message = null)
+{
+    "A description of the error."
+    shared String? message;
+}
 
 "Enum class for the length encoding methods."
 shared class EncodingMethod of primitiveDefiniteLength | constructedDefiniteLength | constructedIndefiniteLength
