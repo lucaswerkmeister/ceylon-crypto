@@ -20,8 +20,8 @@
 by("Dirk Lattermann")
 module de.dlkw.asn1 "0.0.1"
 {
-    import ceylon.buffer "1.2.2";
-    import ceylon.collection "1.2.2";
-    shared import ceylon.time "1.2.2";
-    shared import ceylon.whole "1.2.2";
+    import ceylon.buffer "1.2.3";
+    import ceylon.collection "1.2.3";
+    shared import ceylon.time "1.2.3";
+    shared import ceylon.whole "1.2.3";
 }
